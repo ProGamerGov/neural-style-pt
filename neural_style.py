@@ -15,7 +15,7 @@ parser.add_argument("-style_image", help="Style target image", default='examples
 parser.add_argument("-style_blend_weights", default=None) 
 parser.add_argument("-content_image", help="Content target image", default='examples/inputs/tubingen.jpg')
 parser.add_argument("-image_size", help="Maximum height / width of generated image", type=int, default=512)
-parser.add_argument("-gpu", help="Zero-indexed ID of the GPU to use; for CPU mode set -gpu = -1", type=int, default=0)
+parser.add_argument("-gpu", help="Zero-indexed ID of the GPU to use; for CPU mode set -gpu = -1", default=0)
 
 # Optimization options
 parser.add_argument("-content_weight", type=float, default=5e0) 
@@ -51,7 +51,7 @@ Image.MAX_IMAGE_PIXELS = 1000000000 # Support gigapixel images
 
 
 def main():       
-    dtype = setup_gpu()
+    dtype, multigpu = setup_gpu()
 
     cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu)  
 
@@ -141,11 +141,14 @@ def main():
             if isinstance(layer, nn.MaxPool2d) or isinstance(layer, nn.AvgPool2d):
                 net.add_module(str(len(net)), layer)  
 
+    if multigpu:
+        net = setup_multi_gpu(net)
+        
     # Capture content targets
     for i in content_losses:
         i.mode = 'capture'
     print("Capturing content targets")
-    print_torch(net)
+    print_torch(net, multigpu)
     net(content_image)
 
     # Capture style targets
@@ -224,12 +227,12 @@ def main():
         loss = 0
 
         for mod in content_losses:
-            loss += mod.loss
+            loss += mod.loss.cuda(int(params.gpu[0]))
         for mod in style_losses:
-            loss += mod.loss
+            loss += mod.loss.cuda(int(params.gpu[0]))
         if params.tv_weight > 0:
             for mod in tv_losses:
-                loss += mod.loss
+                loss += mod.loss.cuda(int(params.gpu[0]))
 
         loss.backward()
          
@@ -264,20 +267,50 @@ def setup_optimizer(img):
 
 
 def setup_gpu():
-    if params.gpu > -1:
+    if "," in params.gpu: 
+        params.gpu = params.gpu.split(',')
+        multigpu = True
+    else: 
+        multigpu = False
+    if str(-1) not in params.gpu: 
         if params.backend == 'cudnn': 
             torch.backends.cudnn.enabled = True
             if params.cudnn_autotune:
                 torch.backends.cudnn.benchmark = True  
         else:
             torch.backends.cudnn.enabled = False
-        torch.cuda.set_device(params.gpu)
+        #torch.cuda.set_device(params.gpu)
         dtype = torch.cuda.FloatTensor
-    elif params.gpu == -1: 
+    elif len(params.gpu) == 1 and str(-1) in params.gpu: 
        if params.backend =='mkl': 
            torch.backends.mkl.enabled = True 
        dtype = torch.FloatTensor
-    return dtype 
+    return dtype, multigpu
+
+def setup_multi_gpu(net):
+    gpu_splits = params.multigpu_strategy.split(',')
+    gpus = params.gpu
+    #for i, gpu in enumerate(gpus):
+    #    gpus[i] = int(gpus[i]) 
+       
+    cur_chunk = nn.Sequential()
+    chunks = []
+    for i, l in enumerate(net):
+         cur_chunk.add_module(str(i), net[i])
+         if str(i) in gpu_splits and gpu_splits != '':
+             del gpu_splits[0]
+             chunks.append(cur_chunk)
+             cur_chunk = nn.Sequential()
+    chunks.append(cur_chunk)
+
+    new_net = nn.Sequential()
+    for i, chunk in enumerate(chunks):
+         out_device = gpus[i]
+         if i == len(chunks):
+             out_device = gpus[0]
+         new_net.add_module(str(i), nn.DataParallel(chunks[i], [int(gpus[i])], out_device))
+
+    return new_net
 
 
 # Preprocess an image before passing it to a model.
@@ -315,7 +348,9 @@ def original_colors(content, generated):
 
 
 # Print like Lua/Torch7
-def print_torch(net):
+def print_torch(net, multigpu):
+    if multigpu:
+        return
     simplelist = ""
     for i, layer in enumerate(net, 1):
         simplelist = simplelist + "(" + str(i) + ") -> "
