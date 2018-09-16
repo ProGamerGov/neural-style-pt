@@ -44,6 +44,8 @@ parser.add_argument("-seed", type=int, default=-1)
 
 parser.add_argument("-content_layers", help="layers for content", default='relu4_2')
 parser.add_argument("-style_layers", help="layers for style", default='relu1_1,relu2_1,relu3_1,relu4_1,relu5_1')
+
+parser.add_argument("-multigpu_strategy", default='4,7,29')
 params = parser.parse_args()
 
 
