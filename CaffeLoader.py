@@ -133,7 +133,7 @@ def print_loadcaffe(cnn, layerList):
 # Load the model, and configure pooling layer type
 def loadCaffemodel(model_file, pooling, use_gpu):
     cnn, layerList = modelSelector(str(model_file).lower(), pooling)
-    cnn.load_state_dict(torch.load(model_file))
+    cnn.load_state_dict(torch.load(model_file), strict=False)
     print("Successfully loaded " + str(model_file))
 
     # Maybe convert the model to cuda now, to avoid later issues
