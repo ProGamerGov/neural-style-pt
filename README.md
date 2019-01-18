@@ -227,6 +227,12 @@ If you are running on a GPU, you can also try running with `-backend cudnn` to r
 
 **Solution:** Add the flag `-cudnn_autotune`; this will use the built-in cuDNN autotuner to select the best convolution algorithms.
 
+**Problem:** `KeyError: 'unexpected key "features.0.weight" in state_dict'`
+
+**Solution:** Make sure that either your models were downloaded with the `[donwload_models.py](https://github.com/ProGamerGov/neural-style-pt/blob/master/models/download_models.py)` script, or that you've performed this [fix](https://github.com/jcjohnson/pytorch-vgg/issues/3) on your model if downloaded directly from a source like [pytorch-vgg](https://github.com/jcjohnson/pytorch-vgg). 
+
+
+
 ## Memory Usage
 By default, `neural-style-pt` uses the `nn` backend for convolutions and L-BFGS for optimization. These give good results, but can both use a lot of memory. You can reduce memory usage with the following:
 
