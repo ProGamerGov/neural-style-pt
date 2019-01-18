@@ -229,7 +229,7 @@ If you are running on a GPU, you can also try running with `-backend cudnn` to r
 
 **Problem:** `KeyError: 'unexpected key "features.0.weight" in state_dict'`
 
-**Solution:** Make sure that either your models were downloaded with the `[donwload_models.py](https://github.com/ProGamerGov/neural-style-pt/blob/master/models/download_models.py)` script, or that you've performed this [fix](https://github.com/jcjohnson/pytorch-vgg/issues/3) on your model if downloaded directly from a source like [pytorch-vgg](https://github.com/jcjohnson/pytorch-vgg). 
+**Solution:** Make sure that either your models were downloaded with the [`donwload_models.py`](https://github.com/ProGamerGov/neural-style-pt/blob/master/models/download_models.py) script, or that you've performed this [fix](https://github.com/jcjohnson/pytorch-vgg/issues/3) on your model if downloaded directly from a source like [pytorch-vgg](https://github.com/jcjohnson/pytorch-vgg). 
 
 
 
