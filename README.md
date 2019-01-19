@@ -227,9 +227,12 @@ If you are running on a GPU, you can also try running with `-backend cudnn` to r
 
 **Solution:** Add the flag `-cudnn_autotune`; this will use the built-in cuDNN autotuner to select the best convolution algorithms.
 
-**Problem:** `KeyError: 'unexpected key "features.0.weight" in state_dict'`
+**Problem:** Get the following error message:
 
-**Solution:** Make sure that either your models were downloaded with the [`donwload_models.py`](https://github.com/ProGamerGov/neural-style-pt/blob/master/models/download_models.py) script, or that you've performed this [fix](https://github.com/jcjohnson/pytorch-vgg/issues/3) on your model if downloaded directly from a source like [pytorch-vgg](https://github.com/jcjohnson/pytorch-vgg). 
+`Missing key(s) in state_dict: "classifier.0.bias", "classifier.0.weight", "classifier.3.bias", "classifier.3.weight".
+        Unexpected key(s) in state_dict: "classifier.1.weight", "classifier.1.bias", "classifier.4.weight", "classifier.4.bias".`
+
+**Solution:** Due to a mix up with layer locations older models require a fix to be compatible with newer versions of PyTorch. The included [`donwload_models.py`](https://github.com/ProGamerGov/neural-style-pt/blob/master/models/download_models.py) script will automatically perform these fixes after downloading the models.
 
 
 
