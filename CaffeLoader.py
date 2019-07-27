@@ -102,18 +102,21 @@ vgg19_dict = {
 }
 
 
-def modelSelector(model_file, pooling):
+def modelSelector(model_file, pooling, verbose):
     if "vgg" in model_file:
         if "19" in model_file:
-            print("VGG-19 Architecture Detected")
+            if(verbose == 1):
+                print("VGG-19 Architecture Detected")
             cnn, layerList = VGG(buildSequential(channel_list['VGG-19'], pooling)), vgg19_dict
         elif "16" in model_file:
-            print("VGG-16 Architecture Detected")
+            if(verbose == 1):
+                print("VGG-16 Architecture Detected")
             cnn, layerList = VGG(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
         else:
             raise ValueError("VGG architecture not recognized.")    
     elif "nin" in model_file:
-        print("NIN Architecture Detected")
+        if(verbose == 1):
+            print("NIN Architecture Detected")
         cnn, layerList = NIN(pooling), nin_dict
     else:
         raise ValueError("Model architecture not recognized.")
@@ -131,16 +134,17 @@ def print_loadcaffe(cnn, layerList):
              break
 
 # Load the model, and configure pooling layer type
-def loadCaffemodel(model_file, pooling, use_gpu):
-    cnn, layerList = modelSelector(str(model_file).lower(), pooling)
+def loadCaffemodel(model_file, pooling, use_gpu, verbose):
+    cnn, layerList = modelSelector(str(model_file).lower(), pooling, verbose)
     cnn.load_state_dict(torch.load(model_file))
-    print("Successfully loaded " + str(model_file))
+    if(verbose == 1):
+        print("Successfully loaded " + str(model_file))
 
     # Maybe convert the model to cuda now, to avoid later issues
     if use_gpu > -1:
         cnn = cnn.cuda()
     cnn = cnn.features 
 
-    print_loadcaffe(cnn, layerList)
+    #print_loadcaffe(cnn, layerList)
 
     return cnn, layerList

@@ -53,7 +53,7 @@ Image.MAX_IMAGE_PIXELS = 1000000000 # Support gigapixel images
 def main():       
     dtype = setup_gpu()
 
-    cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu)  
+    cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu, params.verbose)  
 
     content_image = preprocess(params.content_image, params.image_size).type(dtype)
     style_image_input = params.style_image.split(',')
