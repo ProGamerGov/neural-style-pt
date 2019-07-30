@@ -58,7 +58,15 @@ def main():
     cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu)  
 
     content_image = preprocess(params.content_image, params.image_size).type(dtype)
-    style_image_list = params.style_image.split(',')
+    style_image_input = params.style_image.split(',')
+    style_image_list, ext = [], [".jpg",".png"]
+    for image in style_image_input:
+        if os.path.isdir(image):
+            images = (image + "/" + file for file in os.listdir(image)
+            if os.path.splitext(file)[1].lower() in ext)
+            style_image_list.extend(images)
+        else:
+            style_image_list.append(image)
     style_images_caffe = []
     for image in style_image_list:
         style_size = int(params.image_size * params.style_scale)
