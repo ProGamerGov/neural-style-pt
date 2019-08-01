@@ -19,6 +19,7 @@ setuptools.setup(
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Science/Research",
         "Intended Audience :: End Users/Desktop",
+        "Topic :: Artistic Software",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
