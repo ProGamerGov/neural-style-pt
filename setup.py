@@ -2,22 +2,24 @@ import setuptools
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
-    
-with open('requirements.txt') as f:
-    requirements = f.read().splitlines()
 
 setuptools.setup(
     name="neural-style",
-    version="",
+    version="0.0.1.dev1",
     author="ProGamerGov",
     description="A PyTorch implementation of artistic style transfer",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    scripts=[''],
+    keywords='neural style neural-style neural-style-pt pytorch style transfer style-transfer',
+    scripts=['neural-style'],
     url="https://github.com/ProGamerGov/neural-style-pt/",
     packages=setuptools.find_packages(),
-    install_requires=requirements,
+    install_requires=['torch', 'torchvision', 'pillow'],
     classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Science/Research",
+        "Intended Audience :: End Users/Desktop",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

@@ -151,11 +151,9 @@ def loadCaffemodel(model_file, pooling, use_gpu):
 
 # Download pretrained models
 def downloadModels():
-    import os
-    from sys import version_info, exit
+    import os, sys
     from collections import OrderedDict
     from torch.utils.model_zoo import load_url
-
 
     current_path = os.getcwd()
     
@@ -163,21 +161,21 @@ def downloadModels():
     sd = load_url("https://s3-us-west-2.amazonaws.com/jcjohns-models/vgg19-d01eb7cb.pth")
     map = {'classifier.1.weight':u'classifier.0.weight', 'classifier.1.bias':u'classifier.0.bias', 'classifier.4.weight':u'classifier.3.weight', 'classifier.4.bias':u'classifier.3.bias'}
     sd = OrderedDict([(map[k] if k in map else k,v) for k,v in sd.items()])
-    torch.save(sd, current_path + "vgg19-d01eb7cb.pth")
+    torch.save(sd, current_path + "/vgg19-d01eb7cb.pth")
 
     # Download the VGG-16 model and fix the layer names
     sd = load_url("https://s3-us-west-2.amazonaws.com/jcjohns-models/vgg16-00b39a1b.pth")
     map = {'classifier.1.weight':u'classifier.0.weight', 'classifier.1.bias':u'classifier.0.bias', 'classifier.4.weight':u'classifier.3.weight', 'classifier.4.bias':u'classifier.3.bias'}
     sd = OrderedDict([(map[k] if k in map else k,v) for k,v in sd.items()])
-    torch.save(sd, current_path + "vgg16-00b39a1b.pth")
+    torch.save(sd, current_path + "/vgg16-00b39a1b.pth")
 
     # Download the NIN model
-    if version_info[0] < 3:
+    if sys.version_info[0] < 3:
         import urllib
-        urllib.URLopener().retrieve("https://raw.githubusercontent.com/ProGamerGov/pytorch-nin/master/nin_imagenet.pth", current_path + "nin_imagenet.pth")
+        urllib.URLopener().retrieve("https://raw.githubusercontent.com/ProGamerGov/pytorch-nin/master/nin_imagenet.pth", current_path + "/nin_imagenet.pth")
     else: 
         import urllib.request
-        urllib.request.urlretrieve("https://raw.githubusercontent.com/ProGamerGov/pytorch-nin/master/nin_imagenet.pth", current_path + "nin_imagenet.pth")
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/ProGamerGov/pytorch-nin/master/nin_imagenet.pth", current_path + "/nin_imagenet.pth")
         
         
     sys.exit()
