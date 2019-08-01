@@ -4,11 +4,36 @@ This guide will walk you through the setup for `neural-style-pt` on Ubuntu. If y
 
 Note that in order to reduce their size, the pre-packaged binary releases (pip, Conda, etc...) have removed support for some older GPUs, and thus you will have to install from source in order to use these GPUs. 
 
+
 ## With A Package Manager:
 
 The pip and Conda packages ship with CUDA and cuDNN already built in, so after you have installed PyTorch with pip or Conda, you can skip to [installing neural-style-pt](https://github.com/ProGamerGov/neural-style-pt/blob/master/INSTALL.md#install-neural-style-pt). 
 
 ### pip:
+
+If you wish to install neural-style-pt as a pip package, then use the following commands: 
+
+```
+# in a terminal, run the command
+pip install neural-style
+```
+
+Or:
+
+
+```
+# in a terminal, run the command
+pip3 install neural-style
+```
+
+Next download the models with: 
+
+
+```
+neural-style -download_models
+```
+
+#### Github and pip:
 
 Following the pip installation instructions
 [here](http://pytorch.org), you can install PyTorch with the following commands:
