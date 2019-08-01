@@ -10,7 +10,7 @@ setuptools.setup(
     description="A PyTorch implementation of artistic style transfer",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    keywords='neural style neural-style neural-style-pt pytorch style transfer style-transfer',
+    keywords='neural artistic style neural-style neural-style-pt pytorch style transfer style-transfer',
     scripts=['neural-style'],
     url="https://github.com/ProGamerGov/neural-style-pt/",
     packages=setuptools.find_packages(),
