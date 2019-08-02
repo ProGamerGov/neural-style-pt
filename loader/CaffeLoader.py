@@ -116,6 +116,11 @@ def modelSelector(model_file, pooling):
     elif "nin" in model_file:
         print("NIN Architecture Detected")
         cnn, layerList = NIN(pooling), nin_dict
+    elif model_file == "":
+        print("")
+        print("Please run 'neural-style -download_models' if you have not done so already.")
+        print("Then select a model with: '-model_file path/to/model'.")
+        raise ValueError("No model selected.")
     else:
         raise ValueError("Model architecture not recognized.")
     return cnn, layerList
