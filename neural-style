@@ -12,9 +12,9 @@ from loader.CaffeLoader import loadCaffemodel
 import argparse
 parser = argparse.ArgumentParser()
 # Basic options
-parser.add_argument("-style_image", help="Style target image", required=True)
+parser.add_argument("-style_image", help="Style target image", default='')
 parser.add_argument("-style_blend_weights", default=None) 
-parser.add_argument("-content_image", help="Content target image", required=True)
+parser.add_argument("-content_image", help="Content target image", default='')
 parser.add_argument("-image_size", help="Maximum height / width of generated image", type=int, default=512)
 parser.add_argument("-gpu", help="Zero-indexed ID of the GPU to use; for CPU mode set -gpu = -1", type=int, default=0)
 
@@ -38,7 +38,7 @@ parser.add_argument("-output_image", default='out.png')
 parser.add_argument("-style_scale", type=float, default=1.0)
 parser.add_argument("-original_colors", type=int, choices=[0, 1], default=0)
 parser.add_argument("-pooling", choices=['avg', 'max'], default='max')
-parser.add_argument("-model_file", type=str, required=True)
+parser.add_argument("-model_file", help="Ex: path/to/model | 'vgg19-d01eb7cb.pth', 'vgg16-00b39a1b.pth', 'nin_imagenet.pth'", type=str, default='')
 parser.add_argument("-backend", choices=['nn', 'cudnn', 'mkl'], default='nn')
 parser.add_argument("-cudnn_autotune", action='store_true')
 parser.add_argument("-seed", type=int, default=-1)
@@ -55,8 +55,12 @@ Image.MAX_IMAGE_PIXELS = 1000000000 # Support gigapixel images
 
 def main():
     if params.download_models:
-       from loader.CaffeLoader import downloadModels
-       downloadModels()
+        from loader.CaffeLoader import downloadModels
+        downloadModels()
+    if params.content_image == '':
+        raise ValueError("You must select a content image.")
+    if params.style_image == '':
+        raise ValueError("You must select at least one style image or style image directory.")
 
     dtype = setup_gpu()
 
