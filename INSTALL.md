@@ -33,6 +33,12 @@ Next download the models with:
 neural-style -download_models
 ```
 
+By default the models are downloaded to your home directory, but you can specify a download location with: 
+
+```
+neural-style -download_models <download_path>
+```
+
 #### Github and pip:
 
 Following the pip installation instructions
