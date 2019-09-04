@@ -46,7 +46,7 @@ parser.add_argument("-seed", type=int, default=-1)
 parser.add_argument("-content_layers", help="layers for content", default='relu4_2')
 parser.add_argument("-style_layers", help="layers for style", default='relu1_1,relu2_1,relu3_1,relu4_1,relu5_1')
 
-parser.add_argument("-download_models", help="Download the default VGG-19, VGG-16, and NIN models", action='store_true')
+parser.add_argument("-download_models", help="Download the default VGG-19, VGG-16, and NIN models", nargs="?", type=str, const="none")
 params = parser.parse_args()
 
 
@@ -56,7 +56,7 @@ Image.MAX_IMAGE_PIXELS = 1000000000 # Support gigapixel images
 def main():
     if params.download_models:
         from loader.CaffeLoader import downloadModels
-        downloadModels()
+        downloadModels(params.download_models)
     if params.content_image == '':
         raise ValueError("You must select a content image.")
     if params.style_image == '':
