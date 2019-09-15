@@ -17,7 +17,6 @@ class VGG(nn.Module):
         )
 
 
-
 class VGG16_PRUNED(nn.Module):
     def __init__(self, pooling):
       super(VGG16_PRUNED, self).__init__()
@@ -69,7 +68,6 @@ class VGG16_PRUNED(nn.Module):
       )
 
 
-
 class VGG16_FCN32S(nn.Module):
     def __init__(self, pooling):
       super(VGG16_FCN32S, self).__init__() 
@@ -119,8 +117,6 @@ class VGG16_FCN32S(nn.Module):
 	nn.ReLU(inplace=True),
 	nn.Dropout(0.5),
       )
-
-
 
 
 class NIN(nn.Module):
