@@ -17,6 +17,112 @@ class VGG(nn.Module):
         )
 
 
+
+class VGG16_PRUNED(nn.Module):
+    def __init__(self, pooling):
+      super(VGG16_PRUNED, self).__init__()
+      if pooling == 'max':
+        pool2d = nn.MaxPool2d(kernel_size=2, stride=2)
+      elif pooling == 'avg':
+        pool2d = nn.AvgPool2d(kernel_size=2, stride=2)
+
+      self.features = nn.Sequential(
+	nn.Conv2d(3,24,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+	nn.Conv2d(24,22,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+        pool2d,
+	nn.Conv2d(22,41,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+	nn.Conv2d(41,51,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+        pool2d,
+	nn.Conv2d(51,108,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+	nn.Conv2d(108,89,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+	nn.Conv2d(89,111,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+        pool2d,
+	nn.Conv2d(111,184,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+	nn.Conv2d(184,276,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+	nn.Conv2d(276,228,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+        pool2d,
+	nn.Conv2d(228,512,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+	nn.Conv2d(512,512,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+	nn.Conv2d(512,512,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+        pool2d,
+      )
+      self.classifier = nn.Sequential(
+        nn.Linear(512 * 7 * 7, 4096),
+	nn.ReLU(),
+	nn.Dropout(0.5),
+        nn.Linear(4096, 4096),
+	nn.ReLU(),
+	nn.Dropout(0.5),
+      )
+
+
+
+class VGG16_FCN32S(nn.Module):
+    def __init__(self, pooling):
+      super(VGG16_FCN32S, self).__init__() 
+      if pooling == 'max':
+        pool2d = nn.MaxPool2d(kernel_size=2, stride=2)
+      elif pooling == 'avg':
+        pool2d = nn.AvgPool2d(kernel_size=2, stride=2)
+
+      self.features = nn.Sequential(
+	nn.Conv2d(3,64,(3, 3),(1, 1),(100, 100)),
+	nn.ReLU(inplace=True),
+	nn.Conv2d(64,64,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+        pool2d,
+	nn.Conv2d(64,128,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+	nn.Conv2d(128,128,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+        pool2d,
+	nn.Conv2d(128,256,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+	nn.Conv2d(256,256,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+	nn.Conv2d(256,256,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+        pool2d,
+	nn.Conv2d(256,512,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+	nn.Conv2d(512,512,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+	nn.Conv2d(512,512,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+        pool2d,
+	nn.Conv2d(512,512,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+	nn.Conv2d(512,512,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+	nn.Conv2d(512,512,(3, 3),(1, 1),(1, 1)),
+	nn.ReLU(inplace=True),
+        pool2d,
+      )
+      self.classifier = nn.Sequential(
+	nn.Conv2d(512,4096,(7, 7)),
+	nn.ReLU(inplace=True),
+	nn.Dropout(0.5),
+	nn.Conv2d(4096,4096,(1, 1)),
+	nn.ReLU(inplace=True),
+	nn.Dropout(0.5),
+      )
+
+
+
+
 class NIN(nn.Module):
     def __init__(self, pooling):
         super(NIN, self).__init__()
@@ -107,6 +213,13 @@ def modelSelector(model_file, pooling):
         if "19" in model_file:
             print("VGG-19 Architecture Detected")
             cnn, layerList = VGG(buildSequential(channel_list['VGG-19'], pooling)), vgg19_dict
+        elif "pruning" in model_file:
+            print("VGG-16 Channel Pruning Architecture Detected")
+            #cnn, layerList = VGG(buildSequential(channel_list['VGG-16p'], pooling)), vgg16_dict
+            cnn, layerList = VGG16_PRUNED(pooling), vgg16_dict
+        elif "fcn32s" in model_file:
+            print("VGG-16 'fcn32s heavy' Architecture Detected")
+            cnn, layerList = VGG16_FCN32S(pooling), vgg16_dict
         elif "16" in model_file:
             print("VGG-16 Architecture Detected")
             cnn, layerList = VGG(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
@@ -131,9 +244,12 @@ def print_loadcaffe(cnn, layerList):
              break
 
 # Load the model, and configure pooling layer type
-def loadCaffemodel(model_file, pooling, use_gpu):
+def loadCaffemodel(model_file, pooling, use_gpu, disable_check):
     cnn, layerList = modelSelector(str(model_file).lower(), pooling)
-    cnn.load_state_dict(torch.load(model_file))
+    if disable_check:
+        cnn.load_state_dict(torch.load(model_file), strict=False)
+    else:
+        cnn.load_state_dict(torch.load(model_file))
     print("Successfully loaded " + str(model_file))
 
     # Maybe convert the model to cuda now, to avoid later issues
