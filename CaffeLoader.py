@@ -17,106 +17,47 @@ class VGG(nn.Module):
         )
 
 
-class VGG16_PRUNED(nn.Module):
-    def __init__(self, pooling):
-      super(VGG16_PRUNED, self).__init__()
-      if pooling == 'max':
-        pool2d = nn.MaxPool2d(kernel_size=2, stride=2)
-      elif pooling == 'avg':
-        pool2d = nn.AvgPool2d(kernel_size=2, stride=2)
-
-      self.features = nn.Sequential(
-	nn.Conv2d(3,24,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-	nn.Conv2d(24,22,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-        pool2d,
-	nn.Conv2d(22,41,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-	nn.Conv2d(41,51,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-        pool2d,
-	nn.Conv2d(51,108,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-	nn.Conv2d(108,89,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-	nn.Conv2d(89,111,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-        pool2d,
-	nn.Conv2d(111,184,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-	nn.Conv2d(184,276,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-	nn.Conv2d(276,228,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-        pool2d,
-	nn.Conv2d(228,512,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-	nn.Conv2d(512,512,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-	nn.Conv2d(512,512,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-        pool2d,
-      )
-      self.classifier = nn.Sequential(
-        nn.Linear(512 * 7 * 7, 4096),
-	nn.ReLU(),
-	nn.Dropout(0.5),
-        nn.Linear(4096, 4096),
-	nn.ReLU(),
-	nn.Dropout(0.5),
-      )
+class VGG_SOD(nn.Module):
+    def __init__(self, features, num_classes=100):
+        super(VGG_SOD, self).__init__()
+        self.features = features
+        self.classifier = nn.Sequential(
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, 100),
+        )
 
 
-class VGG16_FCN32S(nn.Module):
-    def __init__(self, pooling):
-      super(VGG16_FCN32S, self).__init__() 
-      if pooling == 'max':
-        pool2d = nn.MaxPool2d(kernel_size=2, stride=2)
-      elif pooling == 'avg':
-        pool2d = nn.AvgPool2d(kernel_size=2, stride=2)
+class VGG_FCN32S(nn.Module):
+    def __init__(self, features, num_classes=1000):
+        super(VGG_FCN32S, self).__init__()
+        self.features = features
+        self.classifier = nn.Sequential(
+	  nn.Conv2d(512,4096,(7, 7)),
+	  nn.ReLU(inplace=True),
+	  nn.Dropout(0.5),
+	  nn.Conv2d(4096,4096,(1, 1)),
+	  nn.ReLU(inplace=True),
+	  nn.Dropout(0.5),
+        )
 
-      self.features = nn.Sequential(
-	nn.Conv2d(3,64,(3, 3),(1, 1),(100, 100)),
-	nn.ReLU(inplace=True),
-	nn.Conv2d(64,64,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-        pool2d,
-	nn.Conv2d(64,128,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-	nn.Conv2d(128,128,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-        pool2d,
-	nn.Conv2d(128,256,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-	nn.Conv2d(256,256,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-	nn.Conv2d(256,256,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-        pool2d,
-	nn.Conv2d(256,512,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-	nn.Conv2d(512,512,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-	nn.Conv2d(512,512,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-        pool2d,
-	nn.Conv2d(512,512,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-	nn.Conv2d(512,512,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-	nn.Conv2d(512,512,(3, 3),(1, 1),(1, 1)),
-	nn.ReLU(inplace=True),
-        pool2d,
-      )
-      self.classifier = nn.Sequential(
-	nn.Conv2d(512,4096,(7, 7)),
-	nn.ReLU(inplace=True),
-	nn.Dropout(0.5),
-	nn.Conv2d(4096,4096,(1, 1)),
-	nn.ReLU(inplace=True),
-	nn.Dropout(0.5),
-      )
+
+class VGG_PRUNED(nn.Module):
+    def __init__(self, features, num_classes=1000):
+        super(VGG_PRUNED, self).__init__()
+        self.features = features
+        self.classifier = nn.Sequential(
+          nn.Linear(512 * 7 * 7, 4096),
+	  nn.ReLU(),
+          nn.Dropout(0.5),
+          nn.Linear(4096, 4096),
+	  nn.ReLU(),
+	  nn.Dropout(0.5),
+        )
 
 
 class NIN(nn.Module):
@@ -182,6 +123,7 @@ def buildSequential(channel_list, pooling):
 
 
 channel_list = {
+'VGG-16p': [24, 22, 'P', 41, 51, 'P', 108, 89, 111, 'P', 184, 276, 228, 'P', 512, 512, 512, 'P'],
 'VGG-16': [64, 64, 'P', 128, 128, 'P', 256, 256, 256, 'P', 512, 512, 512, 'P', 512, 512, 512, 'P'],
 'VGG-19': [64, 64, 'P', 128, 128, 'P', 256, 256, 256, 256, 'P', 512, 512, 512, 512, 'P', 512, 512, 512, 512, 'P'],
 }
@@ -205,17 +147,20 @@ vgg19_dict = {
 
 
 def modelSelector(model_file, pooling):
-    if "vgg" in model_file:
-        if "19" in model_file:
+    vgg_list = ["fcn32s","pruning", "sod", "vgg"]
+    if any(ext in model_file for ext in vgg_list):
+        if "pruning" in model_file:
+            print("VGG-16 Channel Pruning Architecture Detected")
+            cnn, layerList = VGG_PRUNED(buildSequential(channel_list['VGG-16p'], pooling)), vgg16_dict
+        elif "fcn32s" in model_file:
+            print("VGG-16 fcn32s-heavy-pascal Architecture Detected")
+            cnn, layerList = VGG_FCN32S(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
+        elif "sod" in model_file:
+            print("VGG-16 SOD Fintune Architecture Detected")
+            cnn, layerList = VGG_SOD(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
+        elif "19" in model_file:
             print("VGG-19 Architecture Detected")
             cnn, layerList = VGG(buildSequential(channel_list['VGG-19'], pooling)), vgg19_dict
-        elif "pruning" in model_file:
-            print("VGG-16 Channel Pruning Architecture Detected")
-            #cnn, layerList = VGG(buildSequential(channel_list['VGG-16p'], pooling)), vgg16_dict
-            cnn, layerList = VGG16_PRUNED(pooling), vgg16_dict
-        elif "fcn32s" in model_file:
-            print("VGG-16 'fcn32s heavy' Architecture Detected")
-            cnn, layerList = VGG16_FCN32S(pooling), vgg16_dict
         elif "16" in model_file:
             print("VGG-16 Architecture Detected")
             cnn, layerList = VGG(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
