@@ -150,13 +150,16 @@ def modelSelector(model_file, pooling):
     vgg_list = ["fcn32s","pruning", "sod", "vgg"]
     if any(ext in model_file for ext in vgg_list):
         if "pruning" in model_file:
-            print("VGG-16 Channel Pruning Architecture Detected")
+            print("VGG-16 Architecture Detected")
+            print("Using The Channel Pruning Model")
             cnn, layerList = VGG_PRUNED(buildSequential(channel_list['VGG-16p'], pooling)), vgg16_dict
         elif "fcn32s" in model_file:
-            print("VGG-16 fcn32s-heavy-pascal Architecture Detected")
+            print("VGG-16 Architecture Detected")
+            print("Using the fcn32s-heavy-pascal Model")
             cnn, layerList = VGG_FCN32S(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
         elif "sod" in model_file:
-            print("VGG-16 SOD Fintune Architecture Detected")
+            print("VGG-16 Architecture Detected")
+            print("Using The SOD Fintune Model")
             cnn, layerList = VGG_SOD(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
         elif "19" in model_file:
             print("VGG-19 Architecture Detected")
