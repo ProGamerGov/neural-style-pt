@@ -17,6 +17,49 @@ class VGG(nn.Module):
         )
 
 
+class VGG_SOD(nn.Module):
+    def __init__(self, features, num_classes=100):
+        super(VGG_SOD, self).__init__()
+        self.features = features
+        self.classifier = nn.Sequential(
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, 100),
+        )
+
+
+class VGG_FCN32S(nn.Module):
+    def __init__(self, features, num_classes=1000):
+        super(VGG_FCN32S, self).__init__()
+        self.features = features
+        self.classifier = nn.Sequential(
+            nn.Conv2d(512,4096,(7, 7)),
+            nn.ReLU(True),
+            nn.Dropout(0.5),
+            nn.Conv2d(4096,4096,(1, 1)),
+            nn.ReLU(True),
+            nn.Dropout(0.5),
+        )
+
+
+class VGG_PRUNED(nn.Module):
+    def __init__(self, features, num_classes=1000):
+        super(VGG_PRUNED, self).__init__()
+        self.features = features
+        self.classifier = nn.Sequential(
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(True),
+            nn.Dropout(0.5),
+            nn.Linear(4096, 4096),
+            nn.ReLU(True),
+            nn.Dropout(0.5),
+        )
+
+
 class NIN(nn.Module):
     def __init__(self, pooling):
         super(NIN, self).__init__()
@@ -80,6 +123,7 @@ def buildSequential(channel_list, pooling):
 
 
 channel_list = {
+'VGG-16p': [24, 22, 'P', 41, 51, 'P', 108, 89, 111, 'P', 184, 276, 228, 'P', 512, 512, 512, 'P'],
 'VGG-16': [64, 64, 'P', 128, 128, 'P', 256, 256, 256, 'P', 512, 512, 512, 'P', 512, 512, 512, 'P'],
 'VGG-19': [64, 64, 'P', 128, 128, 'P', 256, 256, 256, 256, 'P', 512, 512, 512, 512, 'P', 512, 512, 512, 512, 'P'],
 }
@@ -103,8 +147,21 @@ vgg19_dict = {
 
 
 def modelSelector(model_file, pooling):
-    if "vgg" in model_file:
-        if "19" in model_file:
+    vgg_list = ["fcn32s","pruning", "sod", "vgg"]
+    if any(ext in model_file for ext in vgg_list):
+        if "pruning" in model_file:
+            print("VGG-16 Architecture Detected")
+            print("Using The Channel Pruning Model")
+            cnn, layerList = VGG_PRUNED(buildSequential(channel_list['VGG-16p'], pooling)), vgg16_dict
+        elif "fcn32s" in model_file:
+            print("VGG-16 Architecture Detected")
+            print("Using the fcn32s-heavy-pascal Model")
+            cnn, layerList = VGG_FCN32S(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
+        elif "sod" in model_file:
+            print("VGG-16 Architecture Detected")
+            print("Using The SOD Fintune Model")
+            cnn, layerList = VGG_SOD(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
+        elif "19" in model_file:
             print("VGG-19 Architecture Detected")
             cnn, layerList = VGG(buildSequential(channel_list['VGG-19'], pooling)), vgg19_dict
         elif "16" in model_file:
@@ -131,9 +188,12 @@ def print_loadcaffe(cnn, layerList):
              break
 
 # Load the model, and configure pooling layer type
-def loadCaffemodel(model_file, pooling, use_gpu):
+def loadCaffemodel(model_file, pooling, use_gpu, disable_check):
     cnn, layerList = modelSelector(str(model_file).lower(), pooling)
-    cnn.load_state_dict(torch.load(model_file))
+    if disable_check:
+        cnn.load_state_dict(torch.load(model_file), strict=False)
+    else:
+        cnn.load_state_dict(torch.load(model_file))
     print("Successfully loaded " + str(model_file))
 
     # Maybe convert the model to cuda now, to avoid later issues
