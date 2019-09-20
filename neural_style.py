@@ -45,7 +45,7 @@ parser.add_argument("-seed", type=int, default=-1)
 parser.add_argument("-content_layers", help="layers for content", default='relu4_2')
 parser.add_argument("-style_layers", help="layers for style", default='relu1_1,relu2_1,relu3_1,relu4_1,relu5_1')
 
-parser.add_argument("-multigpu_strategy", default='4,7,29')
+parser.add_argument("-multidevice_strategy", default='4,7,29')
 params = parser.parse_args()
 
 
@@ -53,12 +53,20 @@ Image.MAX_IMAGE_PIXELS = 1000000000 # Support gigapixel images
 
 
 def main():       
-    dtype, multigpu = setup_gpu()
+    dtype, multidevice = setup_gpu()
 
-    cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu)  
+    cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu, False)  
 
     content_image = preprocess(params.content_image, params.image_size).type(dtype)
-    style_image_list = params.style_image.split(',')
+    style_image_input = params.style_image.split(',')
+    style_image_list, ext = [], [".jpg",".png"]
+    for image in style_image_input:
+        if os.path.isdir(image):
+            images = (image + "/" + file for file in os.listdir(image)
+            if os.path.splitext(file)[1].lower() in ext)
+            style_image_list.extend(images)
+        else:
+            style_image_list.append(image)
     style_images_caffe = []
     for image in style_image_list:
         style_size = int(params.image_size * params.style_scale)
@@ -141,16 +149,16 @@ def main():
                 r+=1
 
             if isinstance(layer, nn.MaxPool2d) or isinstance(layer, nn.AvgPool2d):
-                net.add_module(str(len(net)), layer)  
+                net.add_module(str(len(net)), layer) 
+ 
+    if multidevice:
+        net = setup_multi_device(net)
 
-    if multigpu:
-        net = setup_multi_gpu(net)
-        
     # Capture content targets
     for i in content_losses:
         i.mode = 'capture'
     print("Capturing content targets")
-    print_torch(net, multigpu)
+    print_torch(net, multidevice)
     net(content_image)
 
     # Capture style targets
@@ -229,12 +237,12 @@ def main():
         loss = 0
 
         for mod in content_losses:
-            loss += mod.loss.cuda(int(params.gpu[0]))
+            loss += mod.loss
         for mod in style_losses:
-            loss += mod.loss.cuda(int(params.gpu[0]))
+            loss += mod.loss
         if params.tv_weight > 0:
             for mod in tv_losses:
-                loss += mod.loss.cuda(int(params.gpu[0]))
+                loss += mod.loss
 
         loss.backward()
          
@@ -269,12 +277,12 @@ def setup_optimizer(img):
 
 
 def setup_gpu():
-    if "," in params.gpu: 
+    if "," in str(params.gpu): 
         params.gpu = params.gpu.split(',')
-        multigpu = True
+        multidevice = True
     else: 
-        multigpu = False
-    if str(-1) not in params.gpu: 
+        multidevice = False
+    if "-1" not in str(params.gpu):
         if params.backend == 'cudnn': 
             torch.backends.cudnn.enabled = True
             if params.cudnn_autotune:
@@ -283,17 +291,20 @@ def setup_gpu():
             torch.backends.cudnn.enabled = False
         #torch.cuda.set_device(params.gpu)
         dtype = torch.cuda.FloatTensor
-    elif len(params.gpu) == 1 and str(-1) in params.gpu: 
+    elif params.gpu == -1: 
        if params.backend =='mkl': 
            torch.backends.mkl.enabled = True 
        dtype = torch.FloatTensor
-    return dtype, multigpu
+    return dtype, multidevice
 
-def setup_multi_gpu(net):
-    gpu_splits = params.multigpu_strategy.split(',')
+
+def setup_multi_device(net):
+    from CaffeLoader import ModelParallelModel()
+    gpu_splits = params.multidevice_strategy.split(',')
     gpus = params.gpu
-    #for i, gpu in enumerate(gpus):
-    #    gpus[i] = int(gpus[i]) 
+    print(gpus)
+    for i, gpu in enumerate(gpus):
+        gpus[i] = int(gpus[i]) 
        
     cur_chunk = nn.Sequential()
     chunks = []
@@ -304,7 +315,7 @@ def setup_multi_gpu(net):
              chunks.append(cur_chunk)
              cur_chunk = nn.Sequential()
     chunks.append(cur_chunk)
-
+    print(chunks)
     new_net = nn.Sequential()
     for i, chunk in enumerate(chunks):
          out_device = gpus[i]
@@ -350,8 +361,8 @@ def original_colors(content, generated):
 
 
 # Print like Lua/Torch7
-def print_torch(net, multigpu):
-    if multigpu:
+def print_torch(net, multidevice):
+    if multidevice:
         return
     simplelist = ""
     for i, layer in enumerate(net, 1):
