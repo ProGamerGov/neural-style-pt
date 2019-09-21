@@ -290,7 +290,7 @@ def setup_gpu():
         else:
             torch.backends.cudnn.enabled = False
         dtype = torch.cuda.FloatTensor
-        backward_device = "cuda:" + str(params.gpu[0])
+        backward_device = "cuda:" + str(params.gpu).split(',')[0]
     elif "c" in str(params.gpu): 
        if params.backend =='mkl': 
            torch.backends.mkl.enabled = True 
