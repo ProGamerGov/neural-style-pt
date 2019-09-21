@@ -101,22 +101,21 @@ class NIN(nn.Module):
             nn.Softmax(),
         )
 
-
         
-class ModelParallelModel(nn.Module):
+class ModelParallel(nn.Module):
     def __init__(self, chunks, device_list):
-        super(ModelParallelModel, self).__init__()
+        super(ModelParallel, self).__init__()
         self.chunks = chunks
         self.device_list = device_list
         print(str(len(self.chunks)))
         print(self.device_list)
 
     def forward(self, input):
-        for i, chunk in enumerate(chunks):
-            if i < len(chunks) -1:
-               input = chunk(input.to(device_list[i]) ).to(device_list[i+1])
+        for i, chunk in enumerate(self.chunks):
+            if i < len(self.chunks) -1:
+               input = chunk(input.to(self.device_list[i]) ).to(self.device_list[i+1])
             else: 
-               input = chunk(input.to(device_list[i]))
+               input = chunk(input.to(self.device_list[i]))
         return input
 
 
@@ -218,7 +217,7 @@ def loadCaffemodel(model_file, pooling, use_gpu, disable_check):
 
     use_gpu=True
     # Maybe convert the model to cuda now, to avoid later issues
-    if use_gpu > -1:
+    if use_gpu:
         cnn = cnn.cuda()
     cnn = cnn.features 
 

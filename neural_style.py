@@ -1,5 +1,3 @@
-#https://pytorch.org/tutorials/intermediate/model_parallel_tutorial.html
-
 import os
 import copy
 import torch
@@ -17,7 +15,7 @@ parser.add_argument("-style_image", help="Style target image", default='examples
 parser.add_argument("-style_blend_weights", default=None) 
 parser.add_argument("-content_image", help="Content target image", default='examples/inputs/tubingen.jpg')
 parser.add_argument("-image_size", help="Maximum height / width of generated image", type=int, default=512)
-parser.add_argument("-gpu", help="Zero-indexed ID of the GPU to use; for CPU mode set -gpu = -1", default=0)
+parser.add_argument("-gpu", help="Zero-indexed ID of the GPU to use; for CPU mode set -gpu = c", default=0)
 
 # Optimization options
 parser.add_argument("-content_weight", type=float, default=5e0) 
@@ -239,12 +237,12 @@ def main():
         loss = 0
 
         for mod in content_losses:
-            loss += mod.loss
+            loss += mod.loss.to('cuda:0')
         for mod in style_losses:
-            loss += mod.loss
+            loss += mod.loss.to('cuda:0')
         if params.tv_weight > 0:
             for mod in tv_losses:
-                loss += mod.loss
+                loss += mod.loss.to('cuda:0')
 
         loss.backward()
          
@@ -284,16 +282,15 @@ def setup_gpu():
         multidevice = True
     else: 
         multidevice = False
-    if "-1" not in str(params.gpu):
+    if "c" not in str(params.gpu):
         if params.backend == 'cudnn': 
             torch.backends.cudnn.enabled = True
             if params.cudnn_autotune:
                 torch.backends.cudnn.benchmark = True  
         else:
             torch.backends.cudnn.enabled = False
-        torch.cuda.set_device(int(params.gpu[0]))
         dtype = torch.cuda.FloatTensor
-    elif params.gpu == -1: 
+    elif "c" in str(params.gpu): 
        if params.backend =='mkl': 
            torch.backends.mkl.enabled = True 
        dtype = torch.FloatTensor
@@ -301,26 +298,22 @@ def setup_gpu():
 
 
 def setup_multi_device(net):
-    from CaffeLoader import ModelParallelModel
-    gpu_splits = params.multidevice_strategy.split(',')
-    devices = params.gpu
-
+    from CaffeLoader import ModelParallel
+    device_splits = params.multidevice_strategy.split(',')
 
     device_list = []
     for i, device in enumerate(params.gpu):
-        devices[i] = int(device) 
         if int(device) > -1:
             device_list.append("cuda:" + str(device))
         else: 
             device_list.append("cpu") 
 
-
     cur_chunk = nn.Sequential()
     chunks = []
     for i, l in enumerate(net):
          cur_chunk.add_module(str(i), net[i])
-         if str(i) in gpu_splits and gpu_splits != '':
-             del gpu_splits[0]
+         if str(i) in device_splits and device_splits != '':
+             del device_splits[0]
              chunks.append(cur_chunk)
              cur_chunk = nn.Sequential()
     chunks.append(cur_chunk)
@@ -328,9 +321,7 @@ def setup_multi_device(net):
     for i, chunk in enumerate(chunks):
         chunk.to(device_list[i])
 
-
-    new_net = nn.Sequential(ModelParallelModel(chunks, device_list)) 
-    
+    new_net = ModelParallel(chunks, device_list) 
 
     return new_net
 
