@@ -53,7 +53,7 @@ Image.MAX_IMAGE_PIXELS = 1000000000 # Support gigapixel images
 
 
 def main():       
-    dtype, multidevice = setup_gpu()
+    dtype, multidevice, backward_device = setup_gpu()
 
     cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu, False)  
 
@@ -152,9 +152,8 @@ def main():
                 net.add_module(str(len(net)), layer) 
  
     if multidevice:
-        net, backward_device = setup_multi_device(net)
-    else: 
-        backward_device = ("cuda:" + str(params.gpu[0]))
+        net = setup_multi_device(net)
+
     # Capture content targets
     for i in content_losses:
         i.mode = 'capture'
@@ -291,11 +290,14 @@ def setup_gpu():
         else:
             torch.backends.cudnn.enabled = False
         dtype = torch.cuda.FloatTensor
+        backward_device = "cuda:" + str(params.gpu[0])
     elif "c" in str(params.gpu): 
        if params.backend =='mkl': 
            torch.backends.mkl.enabled = True 
        dtype = torch.FloatTensor
-    return dtype, multidevice
+       backward_device = "cpu"
+
+    return dtype, multidevice, backward_device
 
 
 def setup_multi_device(net):
@@ -308,11 +310,6 @@ def setup_multi_device(net):
             device_list.append("cuda:" + str(device))
         else: 
             device_list.append("cpu") 
-
-    if int(device) > -1:
-        backward_device = "cuda:" + str(params.gpu[0])
-    else: 
-        backward_device = "cpu"
 
     cur_chunk = nn.Sequential()
     chunks = []
@@ -329,7 +326,7 @@ def setup_multi_device(net):
 
     new_net = ModelParallel(chunks, device_list) 
 
-    return new_net, backward_device
+    return new_net
 
 
 # Preprocess an image before passing it to a model.

@@ -215,9 +215,8 @@ def loadCaffemodel(model_file, pooling, use_gpu, disable_check):
         cnn.load_state_dict(torch.load(model_file))
     print("Successfully loaded " + str(model_file))
 
-    use_gpu=True
     # Maybe convert the model to cuda now, to avoid later issues
-    if use_gpu:
+    if "c" not in str(use_gpu):
         cnn = cnn.cuda()
     cnn = cnn.features 
 
