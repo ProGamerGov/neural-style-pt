@@ -153,7 +153,7 @@ python models/download_models.py
 You should now be able to run `neural-style-pt` in CPU mode like this:
 
 ```
-python neural_style.py -gpu -1 -print_iter 1
+python neural_style.py -gpu c -print_iter 1
 ```
 
 If you installed PyTorch with support for CUDA, then should now be able to run `neural-style-pt` in GPU mode like this:
