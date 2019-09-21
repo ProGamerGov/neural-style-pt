@@ -102,14 +102,10 @@ class NIN(nn.Module):
         )
 
 
-#ModelParallelChunk
-#ChunkParallelModel
-#class ParallelModule(nn.Module):
-#from torch.nn import Sequential
-#from torchvision.models.vgg import VGG as VGG_Test 
+        
 class ModelParallelModel(nn.Module):
     def __init__(self, chunks, device_list):
-        super(ModelParallelModel, self)
+        super(ModelParallelModel, self).__init__()
         self.chunks = chunks
         self.device_list = device_list
         print(str(len(self.chunks)))
