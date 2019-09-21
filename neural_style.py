@@ -364,25 +364,16 @@ def original_colors(content, generated):
 
 # Print like Lua/Torch7
 def print_torch(net, multidevice):
-    def simple_print(net, multichunk):
+    def print_net(net):
         simplelist = ""
-        if multichunk:
-            i = 1
-            for chunk in net:
-                for layer in chunk:
-                    simplelist = simplelist + "(" + str(i) + ") -> "
-                    i+=1
-        else:
-            for i, layer in enumerate(net, 1):
-                simplelist = simplelist + "(" + str(i) + ") -> "
-        print("nn.Sequential ( \n  [input -> " + simplelist + "output]")
+        for i, layer in enumerate(net, 1):
+            simplelist = simplelist + "(" + str(i) + ") -> "
+            print("nn.Sequential ( \n  [input -> " + simplelist + "output]")
 
-    def print_net(net, end_chunk):
         def strip(x):
             return str(x).replace(", ",',').replace("(",'').replace(")",'') + ", "
         def n():
             return "  (" + str(i) + "): " + "nn." + str(l).split("(", 1)[0] 
-
         for i, l in enumerate(net, 1): 
             if "2d" in str(l):
                 ks, st, pd = strip(l.kernel_size), strip(l.stride), strip(l.padding)
@@ -394,20 +385,11 @@ def print_torch(net, multidevice):
                     print(n() + "(" + ((ks).replace(",",'x' + ks, 1) + st).replace(", ",','))
             else:
                 print(n())
-        if end_chunk: 
-            print(")")
-        else: 
-            print() 
+        print(")")
 
     if multidevice:
-        simple_print(net.chunks, True)
-        for i, chunk in enumerate(net.chunks):
-            if i < len(net.chunks) -1:
-                print_net(chunk, False)
-            else: 
-                print_net(chunk, True)
+        return
     else:
-        simple_print(net, False) 
         print_net(net) 
 
 
