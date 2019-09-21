@@ -152,8 +152,9 @@ def main():
                 net.add_module(str(len(net)), layer) 
  
     if multidevice:
-        net = setup_multi_device(net)
-
+        net, backward_device = setup_multi_device(net)
+    else: 
+        backward_device = ("cuda:" + str(params.gpu[0]))
     # Capture content targets
     for i in content_losses:
         i.mode = 'capture'
@@ -237,12 +238,12 @@ def main():
         loss = 0
 
         for mod in content_losses:
-            loss += mod.loss.to('cuda:0')
+            loss += mod.loss.to(backward_device)
         for mod in style_losses:
-            loss += mod.loss.to('cuda:0')
+            loss += mod.loss.to(backward_device)
         if params.tv_weight > 0:
             for mod in tv_losses:
-                loss += mod.loss.to('cuda:0')
+                loss += mod.loss.to(backward_device)
 
         loss.backward()
          
@@ -308,6 +309,11 @@ def setup_multi_device(net):
         else: 
             device_list.append("cpu") 
 
+    if int(device) > -1:
+        backward_device = "cuda:" + str(params.gpu[0])
+    else: 
+        backward_device = "cpu"
+
     cur_chunk = nn.Sequential()
     chunks = []
     for i, l in enumerate(net):
@@ -323,7 +329,7 @@ def setup_multi_device(net):
 
     new_net = ModelParallel(chunks, device_list) 
 
-    return new_net
+    return new_net, backward_device
 
 
 # Preprocess an image before passing it to a model.
