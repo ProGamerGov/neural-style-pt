@@ -102,10 +102,28 @@ class NIN(nn.Module):
         )
 
 
-class ModelParallelModel(VGG):
-    def __init__(self, *args, **kwargs):
-        super(ModelParallelModel, self).__init__(num_models, *args, **kwargs)
-        self.num_models = num_models
+#ModelParallelChunk
+#ChunkParallelModel
+#class ParallelModule(nn.Module):
+#from torch.nn import Sequential
+#from torchvision.models.vgg import VGG as VGG_Test 
+class ModelParallelModel(nn.Module):
+    def __init__(self, chunks, device_list):
+        super(ModelParallelModel, self)
+        self.chunks = chunks
+        self.device_list = device_list
+        print(str(len(self.chunks)))
+        print(self.device_list)
+
+    def forward(self, input):
+        for i, chunk in enumerate(chunks):
+            if i < len(chunks) -1:
+               input = chunk(input.to(device_list[i]) ).to(device_list[i+1])
+            else: 
+               input = chunk(input.to(device_list[i]))
+        return input
+
+
 
     
 
@@ -202,7 +220,7 @@ def loadCaffemodel(model_file, pooling, use_gpu, disable_check):
         cnn.load_state_dict(torch.load(model_file))
     print("Successfully loaded " + str(model_file))
 
-    use_gpu=False
+    use_gpu=True
     # Maybe convert the model to cuda now, to avoid later issues
     if use_gpu > -1:
         cnn = cnn.cuda()

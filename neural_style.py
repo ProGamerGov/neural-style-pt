@@ -1,3 +1,5 @@
+#https://pytorch.org/tutorials/intermediate/model_parallel_tutorial.html
+
 import os
 import copy
 import torch
@@ -289,7 +291,7 @@ def setup_gpu():
                 torch.backends.cudnn.benchmark = True  
         else:
             torch.backends.cudnn.enabled = False
-        #torch.cuda.set_device(params.gpu)
+        torch.cuda.set_device(int(params.gpu[0]))
         dtype = torch.cuda.FloatTensor
     elif params.gpu == -1: 
        if params.backend =='mkl': 
@@ -299,13 +301,20 @@ def setup_gpu():
 
 
 def setup_multi_device(net):
-    from CaffeLoader import ModelParallelModel()
+    from CaffeLoader import ModelParallelModel
     gpu_splits = params.multidevice_strategy.split(',')
-    gpus = params.gpu
-    print(gpus)
-    for i, gpu in enumerate(gpus):
-        gpus[i] = int(gpus[i]) 
-       
+    devices = params.gpu
+
+
+    device_list = []
+    for i, device in enumerate(params.gpu):
+        devices[i] = int(device) 
+        if int(device) > -1:
+            device_list.append("cuda:" + str(device))
+        else: 
+            device_list.append("cpu") 
+
+
     cur_chunk = nn.Sequential()
     chunks = []
     for i, l in enumerate(net):
@@ -315,13 +324,13 @@ def setup_multi_device(net):
              chunks.append(cur_chunk)
              cur_chunk = nn.Sequential()
     chunks.append(cur_chunk)
-    print(chunks)
-    new_net = nn.Sequential()
+    
     for i, chunk in enumerate(chunks):
-         out_device = gpus[i]
-         if i == len(chunks):
-             out_device = gpus[0]
-         new_net.add_module(str(i), nn.DataParallel(chunks[i], [int(gpus[i])], out_device))
+        chunk.to(device_list[i])
+
+
+    new_net = nn.Sequential(ModelParallelModel(chunks, device_list)) 
+    
 
     return new_net
 
