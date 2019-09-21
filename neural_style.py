@@ -297,7 +297,6 @@ def setup_gpu():
            torch.backends.mkl.enabled = True 
        dtype = torch.FloatTensor
        backward_device = "cpu"
-
     return dtype, multidevice, backward_device
 
 
