@@ -280,8 +280,10 @@ def setup_gpu():
     if "," in str(params.gpu): 
         params.gpu = params.gpu.split(',')
         multidevice = True
+        backward_device = "cuda:" + params.gpu[0]
     else: 
         multidevice = False
+        backward_device = "cuda:" + str(params.gpu)
     if "c" not in str(params.gpu):
         if params.backend == 'cudnn': 
             torch.backends.cudnn.enabled = True
@@ -290,7 +292,6 @@ def setup_gpu():
         else:
             torch.backends.cudnn.enabled = False
         dtype = torch.cuda.FloatTensor
-        backward_device = "cuda:" + str(params.gpu).split(',')[0]
     elif "c" in str(params.gpu): 
        if params.backend =='mkl': 
            torch.backends.mkl.enabled = True 
@@ -325,7 +326,6 @@ def setup_multi_device(net):
         chunk.to(device_list[i])
 
     new_net = ModelParallel(chunks, device_list) 
-
     return new_net
 
 
@@ -365,30 +365,51 @@ def original_colors(content, generated):
 
 # Print like Lua/Torch7
 def print_torch(net, multidevice):
+    def simple_print(net, multichunk):
+        simplelist = ""
+        if multichunk:
+            i = 1
+            for chunk in net:
+                for layer in chunk:
+                    simplelist = simplelist + "(" + str(i) + ") -> "
+                    i+=1
+        else:
+            for i, layer in enumerate(net, 1):
+                simplelist = simplelist + "(" + str(i) + ") -> "
+        print("nn.Sequential ( \n  [input -> " + simplelist + "output]")
+
+    def print_net(net, end_chunk):
+        def strip(x):
+            return str(x).replace(", ",',').replace("(",'').replace(")",'') + ", "
+        def n():
+            return "  (" + str(i) + "): " + "nn." + str(l).split("(", 1)[0] 
+
+        for i, l in enumerate(net, 1): 
+            if "2d" in str(l):
+                ks, st, pd = strip(l.kernel_size), strip(l.stride), strip(l.padding)
+                if "Conv2d" in str(l):
+                    ch = str(l.in_channels) + " -> " + str(l.out_channels)
+                    print(n() + "(" + ch + ", " + (ks).replace(",",'x', 1) + st + pd.replace(", ",')')) 
+                elif "Pool2d" in str(l): 
+                    st = st.replace("  ",' ') + st.replace(", ",')')
+                    print(n() + "(" + ((ks).replace(",",'x' + ks, 1) + st).replace(", ",','))
+            else:
+                print(n())
+        if end_chunk: 
+            print(")")
+        else: 
+            print() 
+
     if multidevice:
-        return
-    simplelist = ""
-    for i, layer in enumerate(net, 1):
-        simplelist = simplelist + "(" + str(i) + ") -> "
-    print("nn.Sequential ( \n  [input -> " + simplelist + "output]")
-
-    def strip(x):
-        return str(x).replace(", ",',').replace("(",'').replace(")",'') + ", "
-    def n():
-        return "  (" + str(i) + "): " + "nn." + str(l).split("(", 1)[0] 
-
-    for i, l in enumerate(net, 1): 
-         if "2d" in str(l):
-             ks, st, pd = strip(l.kernel_size), strip(l.stride), strip(l.padding)
-             if "Conv2d" in str(l):
-                 ch = str(l.in_channels) + " -> " + str(l.out_channels)
-                 print(n() + "(" + ch + ", " + (ks).replace(",",'x', 1) + st + pd.replace(", ",')')) 
-             elif "Pool2d" in str(l): 
-                 st = st.replace("  ",' ') + st.replace(", ",')')
-                 print(n() + "(" + ((ks).replace(",",'x' + ks, 1) + st).replace(", ",','))
-         else:
-             print(n()) 
-    print(")") 
+        simple_print(net.chunks, True)
+        for i, chunk in enumerate(net.chunks):
+            if i < len(net.chunks) -1:
+                print_net(chunk, False)
+            else: 
+                print_net(chunk, True)
+    else:
+        simple_print(net, False) 
+        print_net(net) 
 
 
 # Define an nn Module to compute content loss

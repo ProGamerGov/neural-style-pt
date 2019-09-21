@@ -107,8 +107,6 @@ class ModelParallel(nn.Module):
         super(ModelParallel, self).__init__()
         self.chunks = chunks
         self.device_list = device_list
-        print(str(len(self.chunks)))
-        print(self.device_list)
 
     def forward(self, input):
         for i, chunk in enumerate(self.chunks):
@@ -119,8 +117,6 @@ class ModelParallel(nn.Module):
         return input
 
 
-
-    
 
 def buildSequential(channel_list, pooling):
     layers = []
