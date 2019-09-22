@@ -113,7 +113,7 @@ class ModelParallel(nn.Module):
             if i < len(self.chunks) -1:
                input = chunk(input.to(self.device_list[i]) ).to(self.device_list[i+1])
             else: 
-               input = chunk(input.to(self.device_list[i]))
+               input = chunk(input)
         return input
 
 
