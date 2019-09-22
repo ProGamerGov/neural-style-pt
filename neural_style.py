@@ -187,6 +187,7 @@ def main():
     if params.seed >= 0:
         torch.manual_seed(params.seed)
         torch.cuda.manual_seed(params.seed)
+        torch.cuda.manual_seed_all(params.seed)
         torch.backends.cudnn.deterministic=True
     if params.init == 'random':
         B, C, H, W = content_image.size()
