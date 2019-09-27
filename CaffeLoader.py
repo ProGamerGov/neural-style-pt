@@ -107,15 +107,22 @@ class ModelParallel(nn.Module):
         super(ModelParallel, self).__init__()
         self.chunks = chunks
         self.device_list = device_list
-
+               
+    def c(self, input, i):
+        if input.type() == 'torch.FloatTensor' and 'cuda' in self.device_list[i]:
+            input = input.type('torch.cuda.FloatTensor')
+        elif input.type() == 'torch.cuda.FloatTensor' and 'cpu' in self.device_list[i]:
+                input = input.type('torch.FloatTensor')
+        return input
+        
     def forward(self, input):
         for i, chunk in enumerate(self.chunks):
             if i < len(self.chunks) -1:
-               input = chunk(input.to(self.device_list[i]) ).to(self.device_list[i+1])
+               input = self.c(chunk(self.c(input, i).to(self.device_list[i])), i+1).to(self.device_list[i+1])
             else: 
                input = chunk(input)
         return input
-
+      
 
 
 def buildSequential(channel_list, pooling):
@@ -212,7 +219,7 @@ def loadCaffemodel(model_file, pooling, use_gpu, disable_check):
     print("Successfully loaded " + str(model_file))
 
     # Maybe convert the model to cuda now, to avoid later issues
-    if "c" not in str(use_gpu):
+    if "c" not in str(use_gpu) or 'c' not in str(use_gpu[0]).lower():
         cnn = cnn.cuda()
     cnn = cnn.features 
 
