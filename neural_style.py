@@ -278,44 +278,45 @@ def setup_optimizer(img):
 
 
 def setup_gpu():
+
+    def setup_cuda(): 
+        if params.backend == 'cudnn': 
+            torch.backends.cudnn.enabled = True
+            if params.cudnn_autotune:
+                torch.backends.cudnn.benchmark = True  
+        else:
+            torch.backends.cudnn.enabled = False
+
+
+    def setup_cpu():
+       if params.backend =='mkl': 
+           torch.backends.mkl.enabled = True 
+
+    multidevice = False
     if "," in str(params.gpu): 
         params.gpu = params.gpu.split(',')
         multidevice = True
-        backward_device = "cuda:" + params.gpu[0]
-    else: 
-        multidevice = False
-        backward_device = "cuda:" + str(params.gpu)
-        
-    if "c" in str(params.gpu) and "," in str(params.gpu):
-        if params.backend == 'cudnn': 
-            torch.backends.cudnn.enabled = True
-            if params.cudnn_autotune:
-                torch.backends.cudnn.benchmark = True  
-        else:
-            torch.backends.cudnn.enabled = False
-        if params.backend =='mkl': 
-           torch.backends.mkl.enabled = True 
-        if 'cpu' in str(params.gpu[0]).lower()
+
+        if 'c' in str(params.gpu[0]).lower():
             backward_device = "cpu"
-            dtype = torch.cuda.FloatTensor
-        else: 
-             backward_device = "cuda:" + params.gpu[0]
-             dtype = torch.cuda.FloatTensor
-            
-    elif "c" not in str(params.gpu):
-        if params.backend == 'cudnn': 
-            torch.backends.cudnn.enabled = True
-            if params.cudnn_autotune:
-                torch.backends.cudnn.benchmark = True  
+            setup_cuda()
+            setup_cpu()
+            dtype = torch.FloatTensor
         else:
-            torch.backends.cudnn.enabled = False
+            backward_device = "cuda:" + params.gpu[0]
+            setup_cuda()
+            dtype = torch.cuda.FloatTensor
+
+    elif "c" not in str(params.gpu).lower():
+        setup_cuda()
         dtype = torch.cuda.FloatTensor
-        
-    elif "c" in str(params.gpu): 
-       if params.backend =='mkl': 
-           torch.backends.mkl.enabled = True 
+        backward_device = "cuda:" + str(params.gpu)
+
+    else: 
+       setup_cpu() 
        dtype = torch.FloatTensor
        backward_device = "cpu"
+
     return dtype, multidevice, backward_device
 
 
@@ -325,7 +326,7 @@ def setup_multi_device(net):
 
     device_list = []
     for i, device in enumerate(params.gpu):
-        if int(device) > -1:
+        if str(device).lower() != 'c':
             device_list.append("cuda:" + str(device))
         else: 
             device_list.append("cpu") 
