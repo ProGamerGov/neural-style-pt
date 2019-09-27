@@ -107,14 +107,28 @@ class ModelParallel(nn.Module):
         super(ModelParallel, self).__init__()
         self.chunks = chunks
         self.device_list = device_list
+        
+        
+    def convert(self, input, device):
+        if 'cpu' in device:
+            if input.type() == 'torch.cuda.FloatTensor':
+                input = input.type('torch.FloatTensor')
+        elif 'cuda' in device:
+            if input.type() == 'torch.FloatTensor':
+                input = input.type('torch.cuda.FloatTensor')
+        return input
+
 
     def forward(self, input):
         for i, chunk in enumerate(self.chunks):
             if i < len(self.chunks) -1:
-               input = chunk(input.to(self.device_list[i]) ).to(self.device_list[i+1])
+               input = chunk( convert(input, device_list[i]).to(self.device_list[i]) )
+               input = convert(input, device_list[i+1]).to(self.device_list[i+1])
             else: 
                input = chunk(input)
         return input
+      
+       
 
 
 
