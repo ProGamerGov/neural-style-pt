@@ -285,7 +285,24 @@ def setup_gpu():
     else: 
         multidevice = False
         backward_device = "cuda:" + str(params.gpu)
-    if "c" not in str(params.gpu):
+        
+    if "c" in str(params.gpu) and "," in str(params.gpu):
+        if params.backend == 'cudnn': 
+            torch.backends.cudnn.enabled = True
+            if params.cudnn_autotune:
+                torch.backends.cudnn.benchmark = True  
+        else:
+            torch.backends.cudnn.enabled = False
+        if params.backend =='mkl': 
+           torch.backends.mkl.enabled = True 
+        if 'cpu' in str(params.gpu[0]).lower()
+            backward_device = "cpu"
+            dtype = torch.cuda.FloatTensor
+        else: 
+             backward_device = "cuda:" + params.gpu[0]
+             dtype = torch.cuda.FloatTensor
+            
+    elif "c" not in str(params.gpu):
         if params.backend == 'cudnn': 
             torch.backends.cudnn.enabled = True
             if params.cudnn_autotune:
@@ -293,6 +310,7 @@ def setup_gpu():
         else:
             torch.backends.cudnn.enabled = False
         dtype = torch.cuda.FloatTensor
+        
     elif "c" in str(params.gpu): 
        if params.backend =='mkl': 
            torch.backends.mkl.enabled = True 
