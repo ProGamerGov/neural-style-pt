@@ -64,7 +64,7 @@ def main():
     if params.style_image == '':
         raise ValueError("You must select at least one style image or style image directory.")
 
-     dtype, multidevice, backward_device = setup_gpu()
+    dtype, multidevice, backward_device = setup_gpu()
 
     cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu, False)  
 
@@ -249,12 +249,12 @@ def main():
         loss = 0
 
         for mod in content_losses:
-            loss += mod.loss
+            loss += mod.loss.to(backward_device)
         for mod in style_losses:
-            loss += mod.loss
+            loss += mod.loss.to(backward_device)
         if params.tv_weight > 0:
             for mod in tv_losses:
-                loss += mod.loss
+                loss += mod.loss.to(backward_device)
 
         loss.backward()
          
