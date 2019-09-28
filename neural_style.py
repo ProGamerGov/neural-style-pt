@@ -278,7 +278,6 @@ def setup_optimizer(img):
 
 
 def setup_gpu():
-
     def setup_cuda(): 
         if params.backend == 'cudnn': 
             torch.backends.cudnn.enabled = True
@@ -286,7 +285,6 @@ def setup_gpu():
                 torch.backends.cudnn.benchmark = True  
         else:
             torch.backends.cudnn.enabled = False
-
 
     def setup_cpu():
        if params.backend =='mkl': 
@@ -301,22 +299,19 @@ def setup_gpu():
             backward_device = "cpu"
             setup_cuda()
             setup_cpu()
-            dtype = torch.FloatTensor
         else:
             backward_device = "cuda:" + params.gpu[0]
             setup_cuda()
-            dtype = torch.FloatTensor
+        dtype = torch.FloatTensor
 
     elif "c" not in str(params.gpu).lower():
         setup_cuda()
         dtype = torch.cuda.FloatTensor
         backward_device = "cuda:" + str(params.gpu)
-
     else: 
        setup_cpu() 
        dtype = torch.FloatTensor
        backward_device = "cpu"
-
     return dtype, multidevice, backward_device
 
 
