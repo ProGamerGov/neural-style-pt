@@ -378,34 +378,31 @@ def original_colors(content, generated):
 
 
 # Print like Lua/Torch7
-def print_torch(net, multidevice):
-    def print_net(net):
-        simplelist = ""
-        for i, layer in enumerate(net, 1):
-            simplelist = simplelist + "(" + str(i) + ") -> "
-            print("nn.Sequential ( \n  [input -> " + simplelist + "output]")
-
-        def strip(x):
-            return str(x).replace(", ",',').replace("(",'').replace(")",'') + ", "
-        def n():
-            return "  (" + str(i) + "): " + "nn." + str(l).split("(", 1)[0] 
-        for i, l in enumerate(net, 1): 
-            if "2d" in str(l):
-                ks, st, pd = strip(l.kernel_size), strip(l.stride), strip(l.padding)
-                if "Conv2d" in str(l):
-                    ch = str(l.in_channels) + " -> " + str(l.out_channels)
-                    print(n() + "(" + ch + ", " + (ks).replace(",",'x', 1) + st + pd.replace(", ",')')) 
-                elif "Pool2d" in str(l): 
-                    st = st.replace("  ",' ') + st.replace(", ",')')
-                    print(n() + "(" + ((ks).replace(",",'x' + ks, 1) + st).replace(", ",','))
-            else:
-                print(n())
-        print(")")
-
-    if multidevice:
+def print_torch(net, multigpu):
+    if multigpu:
         return
-    else:
-        print_net(net) 
+    simplelist = ""
+    for i, layer in enumerate(net, 1):
+        simplelist = simplelist + "(" + str(i) + ") -> "
+    print("nn.Sequential ( \n  [input -> " + simplelist + "output]")
+
+    def strip(x):
+        return str(x).replace(", ",',').replace("(",'').replace(")",'') + ", "
+    def n():
+        return "  (" + str(i) + "): " + "nn." + str(l).split("(", 1)[0] 
+
+    for i, l in enumerate(net, 1): 
+         if "2d" in str(l):
+             ks, st, pd = strip(l.kernel_size), strip(l.stride), strip(l.padding)
+             if "Conv2d" in str(l):
+                 ch = str(l.in_channels) + " -> " + str(l.out_channels)
+                 print(n() + "(" + ch + ", " + (ks).replace(",",'x', 1) + st + pd.replace(", ",')')) 
+             elif "Pool2d" in str(l): 
+                 st = st.replace("  ",' ') + st.replace(", ",')')
+                 print(n() + "(" + ((ks).replace(",",'x' + ks, 1) + st).replace(", ",','))
+         else:
+             print(n()) 
+    print(")")  
 
 
 # Define an nn Module to compute content loss
