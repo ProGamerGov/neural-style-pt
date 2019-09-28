@@ -305,7 +305,7 @@ def setup_gpu():
         else:
             backward_device = "cuda:" + params.gpu[0]
             setup_cuda()
-            dtype = torch.cuda.FloatTensor
+            dtype = torch.FloatTensor
 
     elif "c" not in str(params.gpu).lower():
         setup_cuda()
