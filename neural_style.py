@@ -378,8 +378,8 @@ def original_colors(content, generated):
 
 
 # Print like Lua/Torch7
-def print_torch(net, multigpu):
-    if multigpu:
+def print_torch(net, multidevice):
+    if multidevice:
         return
     simplelist = ""
     for i, layer in enumerate(net, 1):
