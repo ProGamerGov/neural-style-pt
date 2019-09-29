@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="neural-style",
-    version="0.4",
+    version="0.4.1",
     author="ProGamerGov",
     description="A PyTorch implementation of artistic style transfer",
     long_description=long_description,
