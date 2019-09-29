@@ -141,6 +141,18 @@ sudo cp cuda/include/cudnn.h /usr/local/cuda-9.1/include/
 
 Note that the cuDNN backend can only be used for GPU mode.
 
+### (Optional) Steps 1-3: Install PyTorch with support for AMD GPUs using Radeon Open Compute Stack (ROCm)
+
+
+ROCm utilizes a CUDA porting tool called HIP, which automatically converts CUDA code into HIP code. HIP code can run on both AMD and Nvidia GPUs.
+
+PyTorch does not officially provide support for compilation on the host, but [a user guide posted here](https://github.com/ROCmSoftwarePlatform/pytorch/issues/337#issuecomment-467220107) apparently works well.
+
+It is recommended that if you wish to use PyTorch with an AMD GPU, you install it via the official ROCm dockerfile: 
+https://rocm.github.io/pytorch.html
+
+Supported AMD GPUs for the dockerfile are: Vega10 / gfx900 generation discrete graphics cards (Vega56, Vega64, or MI25).
+
 
 ### Step 3: Install PyTorch
 
