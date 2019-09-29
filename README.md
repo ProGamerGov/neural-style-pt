@@ -125,34 +125,41 @@ If you add the flag `-original_colors 1` then the output image will retain the c
 
 ## Setup:
 
-Dependencies:
-* [PyTorch](http://pytorch.org/)
+While you can use Python 2's pip, it's recommended that you use Python 3's pip:
 
-
-Optional dependencies:
-* For CUDA backend:
-  * CUDA 7.5 or above
-* For cuDNN backend:
-  * cuDNN v6 or above
-
-After installing the dependencies, you'll need to run the following script to download the VGG model:
 ```
-python models/download_models.py
+# in a terminal, run the command
+pip3 install neural-style
 ```
+
+
+After installing neural-style-pt, you'll need to run the following script to download the default VGG and NIN models:
+
+
+```
+neural-style -download_models
+```
+
+By default the models are downloaded to your home directory, but you can specify a download location with: 
+
+```
+neural-style -download_models <download_path>
+```
+
 This will download the original [VGG-19 model](https://gist.github.com/ksimonyan/3785162f95cd2d5fee77#file-readme-md).
 The original [VGG-16 model](https://gist.github.com/ksimonyan/211839e770f7b538e2d8#file-readme-md) will also be downloaded. By default the original VGG-19 model is used.
 
-If you have a smaller memory GPU then using NIN Imagenet model will be better and gives slightly worse yet comparable results. You can get the details on the model from [BVLC Caffe ModelZoo](https://github.com/BVLC/caffe/wiki/Model-Zoo). The NIN model is downloaded when you run the `download_models.py` script.
+If you have a smaller memory GPU then using NIN Imagenet model will be better and gives slightly worse yet comparable results. You can get the details on the model from [BVLC Caffe ModelZoo](https://github.com/BVLC/caffe/wiki/Model-Zoo). The NIN model is downloaded when you run the `neural-style -download_models` script.
 
 ## Usage
 Basic usage:
 ```
-python neural_style.py -style_image <image.jpg> -content_image <image.jpg>
+neural-style -style_image <image.jpg> -content_image <image.jpg>
 ```
 
 cuDNN usage with NIN Model:
 ```
-python neural_style.py -style_image examples/inputs/picasso_selfport1907.jpg -content_image examples/inputs/brad_pitt.jpg -output_image profile.png -model_file models/nin_imagenet.pth -gpu 0 -backend cudnn -num_iterations 1000 -seed 123 -content_layers relu0,relu3,relu7,relu12 -style_layers relu0,relu3,relu7,relu12 -content_weight 10 -style_weight 500 -image_size 512 -optimizer adam
+neural-style -style_image examples/inputs/picasso_selfport1907.jpg -content_image examples/inputs/brad_pitt.jpg -output_image profile.png -model_file models/nin_imagenet.pth -gpu 0 -backend cudnn -num_iterations 1000 -seed 123 -content_layers relu0,relu3,relu7,relu12 -style_layers relu0,relu3,relu7,relu12 -content_weight 10 -style_weight 500 -image_size 512 -optimizer adam
 ```
 
 ![cuDNN NIN Model Picasso Brad Pitt](https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/outputs/pitt_picasso_nin_cudnn.png)
