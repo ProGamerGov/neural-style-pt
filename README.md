@@ -134,6 +134,8 @@ Optional dependencies:
   * CUDA 7.5 or above
 * For cuDNN backend:
   * cuDNN v6 or above
+* For ROCm backend:
+  * ROCm 2.1 or above
 
 After installing the dependencies, you'll need to run the following script to download the VGG model:
 ```
