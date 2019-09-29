@@ -27,7 +27,7 @@ parser.add_argument("-init", choices=['random', 'image'], default='random')
 parser.add_argument("-init_image", default=None)
 parser.add_argument("-optimizer", choices=['lbfgs', 'adam'], default='lbfgs')
 parser.add_argument("-learning_rate", type=float, default=1e0)
-parser.add_argument("-lbfgs_num_correction", type=int, default=0)
+parser.add_argument("-lbfgs_num_correction", type=int, default=100)
 
 # Output options      
 parser.add_argument("-print_iter", type=int, default=50)
@@ -276,7 +276,7 @@ def setup_optimizer(img):
             'tolerance_change': -1,
             'tolerance_grad': -1,
         }
-        if params.lbfgs_num_correction > 0:
+        if params.lbfgs_num_correction != 100:
             optim_state['history_size'] = params.lbfgs_num_correction
         optimizer = optim.LBFGS([img], **optim_state)
         loopVal = 1
