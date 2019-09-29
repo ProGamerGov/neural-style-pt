@@ -38,6 +38,7 @@ parser.add_argument("-style_scale", type=float, default=1.0)
 parser.add_argument("-original_colors", type=int, choices=[0, 1], default=0)
 parser.add_argument("-pooling", choices=['avg', 'max'], default='max')
 parser.add_argument("-model_file", type=str, default='models/vgg19-d01eb7cb.pth')
+parser.add_argument("-disable_check", action='store_true')
 parser.add_argument("-backend", choices=['nn', 'cudnn', 'mkl'], default='nn')
 parser.add_argument("-cudnn_autotune", action='store_true')
 parser.add_argument("-seed", type=int, default=-1)
@@ -55,7 +56,7 @@ Image.MAX_IMAGE_PIXELS = 1000000000 # Support gigapixel images
 def main():       
     dtype, multidevice, backward_device = setup_gpu()
 
-    cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu, False)  
+    cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu, params.disable_check)  
 
     content_image = preprocess(params.content_image, params.image_size).type(dtype)
     style_image_input = params.style_image.split(',')
