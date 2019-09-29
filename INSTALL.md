@@ -141,6 +141,18 @@ sudo cp cuda/include/cudnn.h /usr/local/cuda-9.1/include/
 
 Note that the cuDNN backend can only be used for GPU mode.
 
+### (Optional) Steps 1-3: Install PyTorch with support for AMD GPUs using Radeon Open Compute Stack (ROCm)
+
+
+It is recommended that if you wish to use PyTorch with an AMD GPU, you install it via the official ROCm dockerfile: 
+https://rocm.github.io/pytorch.html
+
+- Supported AMD GPUs for the dockerfile are: Vega10 / gfx900 generation discrete graphics cards (Vega56, Vega64, or MI25).
+
+PyTorch does not officially provide support for compilation on the host, but [a user guide posted here](https://github.com/ROCmSoftwarePlatform/pytorch/issues/337#issuecomment-467220107) apparently works well.
+
+ROCm utilizes a CUDA porting tool called HIP, which automatically converts CUDA code into HIP code. HIP code can run on both AMD and Nvidia GPUs. 
+
 
 ### Step 3: Install PyTorch
 
@@ -184,7 +196,7 @@ python models/download_models.py
 You should now be able to run `neural-style-pt` in CPU mode like this:
 
 ```
-python neural_style.py -gpu -1 -print_iter 1
+python neural_style.py -gpu c -print_iter 1
 ```
 
 If you installed PyTorch with support for CUDA, then should now be able to run `neural-style-pt` in GPU mode like this:

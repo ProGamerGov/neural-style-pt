@@ -15,7 +15,7 @@ parser.add_argument("-style_image", help="Style target image", default='examples
 parser.add_argument("-style_blend_weights", default=None) 
 parser.add_argument("-content_image", help="Content target image", default='examples/inputs/tubingen.jpg')
 parser.add_argument("-image_size", help="Maximum height / width of generated image", type=int, default=512)
-parser.add_argument("-gpu", help="Zero-indexed ID of the GPU to use; for CPU mode set -gpu = -1", type=int, default=0)
+parser.add_argument("-gpu", help="Zero-indexed ID of the GPU to use; for CPU mode set -gpu = c", default=0)
 
 # Optimization options
 parser.add_argument("-content_weight", type=float, default=5e0) 
@@ -26,7 +26,7 @@ parser.add_argument("-init", choices=['random', 'image'], default='random')
 parser.add_argument("-init_image", default=None)
 parser.add_argument("-optimizer", choices=['lbfgs', 'adam'], default='lbfgs')
 parser.add_argument("-learning_rate", type=float, default=1e0)
-parser.add_argument("-lbfgs_num_correction", type=int, default=0)
+parser.add_argument("-lbfgs_num_correction", type=int, default=100)
 
 # Output options      
 parser.add_argument("-print_iter", type=int, default=50)
@@ -38,12 +38,15 @@ parser.add_argument("-style_scale", type=float, default=1.0)
 parser.add_argument("-original_colors", type=int, choices=[0, 1], default=0)
 parser.add_argument("-pooling", choices=['avg', 'max'], default='max')
 parser.add_argument("-model_file", type=str, default='models/vgg19-d01eb7cb.pth')
+parser.add_argument("-disable_check", action='store_true')
 parser.add_argument("-backend", choices=['nn', 'cudnn', 'mkl'], default='nn')
 parser.add_argument("-cudnn_autotune", action='store_true')
 parser.add_argument("-seed", type=int, default=-1)
 
 parser.add_argument("-content_layers", help="layers for content", default='relu4_2')
 parser.add_argument("-style_layers", help="layers for style", default='relu1_1,relu2_1,relu3_1,relu4_1,relu5_1')
+
+parser.add_argument("-multidevice_strategy", default='4,7,29')
 params = parser.parse_args()
 
 
@@ -51,9 +54,9 @@ Image.MAX_IMAGE_PIXELS = 1000000000 # Support gigapixel images
 
 
 def main():       
-    dtype = setup_gpu()
+    dtype, multidevice, backward_device = setup_gpu()
 
-    cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu, False)  
+    cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu, params.disable_check)  
 
     content_image = preprocess(params.content_image, params.image_size).type(dtype)
     style_image_input = params.style_image.split(',')
@@ -147,13 +150,16 @@ def main():
                 r+=1
 
             if isinstance(layer, nn.MaxPool2d) or isinstance(layer, nn.AvgPool2d):
-                net.add_module(str(len(net)), layer)  
+                net.add_module(str(len(net)), layer) 
+ 
+    if multidevice:
+        net = setup_multi_device(net)
 
     # Capture content targets
     for i in content_losses:
         i.mode = 'capture'
     print("Capturing content targets")
-    print_torch(net)
+    print_torch(net, multidevice)
     net(content_image)
 
     # Capture style targets
@@ -181,7 +187,7 @@ def main():
     # Initialize the image
     if params.seed >= 0:
         torch.manual_seed(params.seed)
-        torch.cuda.manual_seed(params.seed)
+        torch.cuda.manual_seed_all(params.seed)
         torch.backends.cudnn.deterministic=True
     if params.init == 'random':
         B, C, H, W = content_image.size()
@@ -232,12 +238,12 @@ def main():
         loss = 0
 
         for mod in content_losses:
-            loss += mod.loss
+            loss += mod.loss.to(backward_device)
         for mod in style_losses:
-            loss += mod.loss
+            loss += mod.loss.to(backward_device)
         if params.tv_weight > 0:
             for mod in tv_losses:
-                loss += mod.loss
+                loss += mod.loss.to(backward_device)
 
         loss.backward()
          
@@ -260,7 +266,7 @@ def setup_optimizer(img):
             'tolerance_change': -1,
             'tolerance_grad': -1,
         }
-        if params.lbfgs_num_correction > 0:
+        if params.lbfgs_num_correction != 100:
             optim_state['history_size'] = params.lbfgs_num_correction
         optimizer = optim.LBFGS([img], **optim_state)
         loopVal = 1
@@ -272,20 +278,69 @@ def setup_optimizer(img):
 
 
 def setup_gpu():
-    if params.gpu > -1:
+    def setup_cuda(): 
         if params.backend == 'cudnn': 
             torch.backends.cudnn.enabled = True
             if params.cudnn_autotune:
                 torch.backends.cudnn.benchmark = True  
         else:
             torch.backends.cudnn.enabled = False
-        torch.cuda.set_device(params.gpu)
-        dtype = torch.cuda.FloatTensor
-    elif params.gpu == -1: 
+
+    def setup_cpu():
        if params.backend =='mkl': 
            torch.backends.mkl.enabled = True 
+
+    multidevice = False
+    if "," in str(params.gpu): 
+        params.gpu = params.gpu.split(',')
+        multidevice = True
+
+        if 'c' in str(params.gpu[0]).lower():
+            backward_device = "cpu"
+            setup_cuda()
+            setup_cpu()
+        else:
+            backward_device = "cuda:" + params.gpu[0]
+            setup_cuda()
+        dtype = torch.FloatTensor
+
+    elif "c" not in str(params.gpu).lower():
+        setup_cuda()
+        dtype = torch.cuda.FloatTensor
+        backward_device = "cuda:" + str(params.gpu)
+    else: 
+       setup_cpu() 
        dtype = torch.FloatTensor
-    return dtype 
+       backward_device = "cpu"
+    return dtype, multidevice, backward_device
+
+
+def setup_multi_device(net):
+    from CaffeLoader import ModelParallel
+    device_splits = params.multidevice_strategy.split(',')
+
+    device_list = []
+    for i, device in enumerate(params.gpu):
+        if str(device).lower() != 'c':
+            device_list.append("cuda:" + str(device))
+        else: 
+            device_list.append("cpu") 
+
+    cur_chunk = nn.Sequential()
+    chunks = []
+    for i, l in enumerate(net):
+         cur_chunk.add_module(str(i), net[i])
+         if str(i) in device_splits and device_splits != '':
+             del device_splits[0]
+             chunks.append(cur_chunk)
+             cur_chunk = nn.Sequential()
+    chunks.append(cur_chunk)
+    
+    for i, chunk in enumerate(chunks):
+        chunk.to(device_list[i])
+
+    new_net = ModelParallel(chunks, device_list) 
+    return new_net
 
 
 # Preprocess an image before passing it to a model.
@@ -323,7 +378,9 @@ def original_colors(content, generated):
 
 
 # Print like Lua/Torch7
-def print_torch(net):
+def print_torch(net, multidevice):
+    if multidevice:
+        return
     simplelist = ""
     for i, layer in enumerate(net, 1):
         simplelist = simplelist + "(" + str(i) + ") -> "
@@ -345,7 +402,7 @@ def print_torch(net):
                  print(n() + "(" + ((ks).replace(",",'x' + ks, 1) + st).replace(", ",','))
          else:
              print(n()) 
-    print(")") 
+    print(")")  
 
 
 # Define an nn Module to compute content loss
