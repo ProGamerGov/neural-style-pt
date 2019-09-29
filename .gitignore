@@ -4,3 +4,6 @@ out*.png
 *.jpg
 *.pyc
 *.pth
+neural_style.egg-info/
+build/
+dist/
