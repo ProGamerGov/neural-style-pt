@@ -12,7 +12,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     keywords='neural artistic style neural-style neural-style-pt pytorch style transfer style-transfer',
     scripts=['neural-style'],
-    url="https://github.com/ProGamerGov/neural-style-pt/",
+    url="https://github.com/ProGamerGov/neural-style-pt/tree/pip-master",
     packages=setuptools.find_packages(),
     install_requires=['torch', 'torchvision', 'pillow'],
     classifiers=[
