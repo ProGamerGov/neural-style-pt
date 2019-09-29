@@ -327,7 +327,7 @@ def setup_gpu():
 
 
 def setup_multi_device(net):
-    from CaffeLoader import ModelParallel
+    from loader.CaffeLoader import ModelParallel
     device_splits = params.multidevice_strategy.split(',')
 
     device_list = []
