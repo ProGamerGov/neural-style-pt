@@ -227,6 +227,15 @@ If you are running on a GPU, you can also try running with `-backend cudnn` to r
 
 **Solution:** Add the flag `-cudnn_autotune`; this will use the built-in cuDNN autotuner to select the best convolution algorithms.
 
+**Problem:** Get the following error message:
+
+`Missing key(s) in state_dict: "classifier.0.bias", "classifier.0.weight", "classifier.3.bias", "classifier.3.weight".
+        Unexpected key(s) in state_dict: "classifier.1.weight", "classifier.1.bias", "classifier.4.weight", "classifier.4.bias".`
+
+**Solution:** Due to a mix up with layer locations, older models require a fix to be compatible with newer versions of PyTorch. The included [`donwload_models.py`](https://github.com/ProGamerGov/neural-style-pt/blob/master/models/download_models.py) script will automatically perform these fixes after downloading the models.
+
+
+
 ## Memory Usage
 By default, `neural-style-pt` uses the `nn` backend for convolutions and L-BFGS for optimization. These give good results, but can both use a lot of memory. You can reduce memory usage with the following:
 
