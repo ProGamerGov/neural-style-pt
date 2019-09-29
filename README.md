@@ -237,7 +237,7 @@ If you are running on a GPU, you can also try running with `-backend cudnn` to r
 `Missing key(s) in state_dict: "classifier.0.bias", "classifier.0.weight", "classifier.3.bias", "classifier.3.weight".
         Unexpected key(s) in state_dict: "classifier.1.weight", "classifier.1.bias", "classifier.4.weight", "classifier.4.bias".`
 
-**Solution:** Due to a mix up with layer locations, older models require a fix to be compatible with newer versions of PyTorch. The included [`donwload_models.py`](https://github.com/ProGamerGov/neural-style-pt/blob/master/models/download_models.py) script will automatically perform these fixes after downloading the models.
+**Solution:** Due to a mix up with layer locations, older models require a fix to be compatible with newer versions of PyTorch. Donwloading the models with `neural-style -download_models` will automatically perform these fixes after downloading the models. You can find other compatible models [here](https://github.com/ProGamerGov/neural-style-pt/wiki/Other-Models). 
 
 
 
