@@ -49,16 +49,14 @@ Following the pip installation instructions
 ```
 # in a terminal, run the commands
 cd ~/
-pip install torch 
-pip install torchvision 
+pip install torch torchvision 
 ```
 
 Or:
 
 ```
 cd ~/
-pip3 install torch 
-pip3 install torchvision 
+pip3 install torch torchvision
 ```
 
 ### Conda:
