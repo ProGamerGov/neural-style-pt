@@ -194,7 +194,7 @@ pip3 install torch===1.2.0 torchvision===0.4.0 -f https://download.pytorch.org/w
 ```
 
 
-After that download the neural-style-pt Github respoistory and unzip it. 
+After that download the neural-style-pt Github respository and unzip it. 
 
 Then copy the file path to your neural-style-pt folder, and paste it into the CMD terminal, with `cd` in front of it.
 
