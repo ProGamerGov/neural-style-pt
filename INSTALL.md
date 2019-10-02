@@ -179,6 +179,32 @@ You can then type `print(torch.version.cuda)` and `print(torch.backends.cudnn.ve
 To quit just type `exit()` or use  Ctrl-D.
 
 
+
+
+# Windows Installation
+
+
+First, you will need to download Python 3 and install it: https://www.python.org/downloads/windows/
+
+Then using https://pytorch.org/, get the correct pip command and paste it into the Windows CMD terminal:
+
+
+```
+pip3 install torch===1.2.0 torchvision===0.4.0 -f https://download.pytorch.org/whl/torch_stable.html
+```
+
+
+After that download the neural-style-pt Github respoistory and unzip it. 
+
+Then copy the file path to your neural-style-pt folder, and paste it into the CMD terminal, with `cd` in front of it.
+
+After that download the models with:
+
+```
+python models/download_models.py
+```
+
+
 ## Install neural-style-pt
 
 First we clone `neural-style-pt` from GitHub:
@@ -257,44 +283,3 @@ Iteration 5 / 1000
   Style 5 loss: 526.118591309
   Total loss: 10912633.0
 ```
-
-
-
----
-
-# Windows Installation
-
-
-First, you will need to download Python and install it: https://www.python.org/downloads/windows/
-
-Then simply install neural-style-pt with pip: 
-
-```
-pip install neural-style
-```
-
-Or if you installed Python 3: 
-
-```
-pip3 install neural-style
-```
-
-If that doesn't work, then got to https://pytorch.org/ and get the correct pip command: 
-
-
-```
-```
-
-Then run: 
-
-
-```
-pip install neural-style
-```
-
-Or if you installed Python 3: 
-
-```
-pip3 install neural-style
-```
-
