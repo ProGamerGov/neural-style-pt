@@ -278,3 +278,23 @@ Or if you installed Python 3:
 ```
 pip3 install neural-style
 ```
+
+If that doesn't work, then got to https://pytorch.org/ and get the correct pip command: 
+
+
+```
+```
+
+Then run: 
+
+
+```
+pip install neural-style
+```
+
+Or if you installed Python 3: 
+
+```
+pip3 install neural-style
+```
+
