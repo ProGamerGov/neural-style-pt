@@ -221,7 +221,7 @@ path or a full absolute path.
 * `-cudnn_autotune`: When using the cuDNN backend, pass this flag to use the built-in cuDNN autotuner to select
   the best convolution algorithms for your architecture. This will make the first iteration a bit slower and can
   take a bit more memory, but may significantly speed up the cuDNN backend.
-* `-download_models`: Path to where the VGG-19, VGG-16, and NIN models should be downloaded. If no path is specified, the models will be downloaded to your home directoy. 
+* `-download_models`: Path to where the VGG-19, VGG-16, and NIN models should be downloaded. If no path is specified, the models will be downloaded to your home directory. 
 
 ## Frequently Asked Questions
 
