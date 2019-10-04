@@ -68,7 +68,7 @@ Following the Conda installation instructions
 conda install pytorch torchvision -c pytorch
 ```
 
-Now continue to [installing neural-style-pt](https://github.com/ProGamerGov/neural-style-pt/blob/master/INSTALL.md#install-neural-style-pt) to install neural-style-pt.
+Now continue on to [installing neural-style-pt](https://github.com/ProGamerGov/neural-style-pt/blob/master/INSTALL.md#install-neural-style-pt) to install neural-style-pt.
 
 ## From Source:
 
@@ -177,7 +177,7 @@ You can then type `print(torch.version.cuda)` and `print(torch.backends.cudnn.ve
 
 To quit just type `exit()` or use  Ctrl-D.
 
-Now continue to [installing neural-style-pt](https://github.com/ProGamerGov/neural-style-pt/blob/master/INSTALL.md#install-neural-style-pt) to install neural-style-pt.
+Now continue on to [installing neural-style-pt](https://github.com/ProGamerGov/neural-style-pt/blob/master/INSTALL.md#install-neural-style-pt) to install neural-style-pt.
 
 
 # Windows Installation
@@ -207,7 +207,7 @@ In the example below, the neural-style-pt folder was placed on the desktop:
 >cd C:\Users\<Computer_Name>\Desktop\neural-style-pt-master
 ```
 
-You can now continue to [installing neural-style-pt](https://github.com/ProGamerGov/neural-style-pt/blob/master/INSTALL.md#install-neural-style-pt), skipping the `git clone` step. 
+You can now continue on to [installing neural-style-pt](https://github.com/ProGamerGov/neural-style-pt/blob/master/INSTALL.md#install-neural-style-pt), skipping the `git clone` step. 
 
 ## Install neural-style-pt
 
