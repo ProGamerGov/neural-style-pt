@@ -196,7 +196,6 @@ path or a full absolute path.
 * `-output_image`: Name of the output image. Default is `out.png`.
 * `-print_iter`: Print progress every `print_iter` iterations. Set to 0 to disable printing.
 * `-save_iter`: Save the image every `save_iter` iterations. Set to 0 to disable saving intermediate results.
-* `-seed`: An interger value that you can specify for repeatable results. By default this value is random for each run.
 
 **Layer options**:
 * `-content_layers`: Comma-separated list of layer names to use for content reconstruction.
@@ -213,6 +212,7 @@ path or a full absolute path.
   The VGG-19 models uses max pooling layers, but the paper mentions that replacing these layers with average
   pooling layers can improve the results. I haven't been able to get good results using average pooling, but
   the option is here.
+* `-seed`: An interger value that you can specify for repeatable results. By default this value is random for each run.
 * `-backend`: `nn`, `cudnn`, or `mkl`. Default is `nn`.
   `mkl` requires Intel's MKL backend.
 * `-cudnn_autotune`: When using the cuDNN backend, pass this flag to use the built-in cuDNN autotuner to select
