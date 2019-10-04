@@ -174,7 +174,7 @@ path or a full absolute path.
 * `-style_blend_weights`: The weight for blending the style of multiple style images, as a
   comma-separated list, such as `-style_blend_weights 3,7`. By default all style images
   are equally weighted.
-* `-gpu`: Zero-indexed ID of the GPU to use; for CPU mode set `-gpu` to `c`. For multiple devices, use a comma separated list of zero-indexed GPU IDs and `c` for the CPU.
+* `-gpu`: Zero-indexed ID of the GPU to use; for CPU mode set `-gpu` to `c`. For multiple devices, use a comma-separated list of zero-indexed GPU IDs and `c` for the CPU.
 
 **Optimization options**:
 * `-content_weight`: How much to weight the content reconstruction term. Default is 5e0.
