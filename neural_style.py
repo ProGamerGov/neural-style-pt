@@ -318,6 +318,9 @@ def setup_gpu():
 def setup_multi_device(net):
     from CaffeLoader import ModelParallel
     device_splits = params.multidevice_strategy.split(',')
+    
+    assert len(params.gpu) == len(device_splits) - 1, \
+      "The number of -gpu devices must be equal to the number of -multidevice_strategy layer indices minus 1."
 
     device_list = []
     for i, device in enumerate(params.gpu):
