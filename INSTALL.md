@@ -80,14 +80,14 @@ First download and unpack the local CUDA installer from NVIDIA; note that there 
 installers for each recent version of Ubuntu:
 
 ```
-# For Ubuntu 17.0.4
-sudo dpkg -i cuda-repo-ubuntu1704-9-1-local_9.1.85-1_amd64.deb
+# For Ubuntu 18.04
+sudo dpkg -i cuda-repo-ubuntu1804-10-1-local-10.1.243-418.87.00_1.0-1_amd64.deb
 sudo apt-key add /var/cuda-repo-<version>/7fa2af80.pub
 ```
 
 ```
-# For Ubuntu 16.0.4
-sudo dpkg -i cuda-repo-ubuntu1604-9-1-local_9.1.85-1_amd64.deb
+# For Ubuntu 16.04
+sudo dpkg -i cuda-repo-ubuntu1604-10-1-local-10.1.243-418.87.00_1.0-1_amd64.deb
 sudo apt-key add /var/cuda-repo-<version>/7fa2af80.pub
 ```
 
@@ -134,9 +134,9 @@ After registering as a developer with NVIDIA, you can [download cuDNN here](http
 After dowloading, you can unpack and install cuDNN like this:
 
 ```
-tar -xvzf cudnn-9.1-linux-x64-v7.1.tgz
-sudo cp cuda/lib64/libcudnn* /usr/local/cuda-9.1/lib64/
-sudo cp cuda/include/cudnn.h /usr/local/cuda-9.1/include/
+tar -zxvf cudnn-10.1-linux-x64-v7.5.0.56.tgz
+sudo cp cuda/lib64/libcudnn* /usr/local/cuda/lib64
+sudo cp cuda/include/cudnn.h /usr/local/cuda/include
 ```
 
 Note that the cuDNN backend can only be used for GPU mode.
