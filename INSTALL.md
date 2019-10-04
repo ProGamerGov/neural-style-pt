@@ -196,16 +196,23 @@ pip3 install torch===1.2.0 torchvision===0.4.0 -f https://download.pytorch.org/w
 ```
 
 
-After that download the neural-style-pt Github respository and unzip it. 
+After that download the neural-style-pt Github respository and extract/unzip it.
 
 Then copy the file path to your neural-style-pt folder, and paste it into the CMD terminal, with `cd` in front of it and then hit enter.
 
-After that download the models with:
+In the example below, the neural-style-pt folder was placed on the desktop:
+
+```
+>cd C:\Users\<Computer_Name>\Desktop\neural-style-pt-master
+```
+
+After that download the pretrained neural network models:
 
 ```
 python models/download_models.py
 ```
 
+You can then continue on with the next set of steps below, skipping the `git clone` and download models part. 
 
 ## Install neural-style-pt
 
