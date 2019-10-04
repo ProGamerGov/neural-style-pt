@@ -207,6 +207,7 @@ path or a full absolute path.
   Default is `relu1_1,relu2_1,relu3_1,relu4_1,relu5_1`.
 
 **Other options**:
+* `-download_models`: Path to where the VGG-19, VGG-16, and NIN models should be downloaded. If no path is specified, the models will be downloaded to your home directoy. 
 * `-style_scale`: Scale at which to extract features from the style image. Default is 1.0.
 * `-original_colors`: If you set this to 1, then the output image will keep the colors of the content image.
 * `-model_file`: Path to the `.pth` file for the VGG Caffe model. Default is the original VGG-19 model; you can also try the original VGG-16 model.
