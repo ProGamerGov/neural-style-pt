@@ -175,6 +175,7 @@ path or a full absolute path.
   comma-separated list, such as `-style_blend_weights 3,7`. By default all style images
   are equally weighted.
 * `-gpu`: Zero-indexed ID of the GPU to use; for CPU mode set `-gpu` to `c`.
+* `-multidevice_strategy`: A comma-separated list of layer indices at which to split the network.
 
 **Optimization options**:
 * `-content_weight`: How much to weight the content reconstruction term. Default is 5e0.
@@ -195,6 +196,7 @@ path or a full absolute path.
 * `-output_image`: Name of the output image. Default is `out.png`.
 * `-print_iter`: Print progress every `print_iter` iterations. Set to 0 to disable printing.
 * `-save_iter`: Save the image every `save_iter` iterations. Set to 0 to disable saving intermediate results.
+* `-seed`: An interger value that you can specify for repeatable results. By default this value is random for each run.
 
 **Layer options**:
 * `-content_layers`: Comma-separated list of layer names to use for content reconstruction.
