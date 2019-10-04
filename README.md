@@ -188,6 +188,7 @@ path or a full absolute path.
 * `-init`: Method for generating the generated image; one of `random` or `image`.
   Default is `random` which uses a noise initialization as in the paper; `image`
   initializes with the content image.
+* `-init_image`: Replaces the initialization image with a user specified image. 
 * `-optimizer`: The optimization algorithm to use; either `lbfgs` or `adam`; default is `lbfgs`.
   L-BFGS tends to give better results, but uses more memory. Switching to ADAM will reduce memory usage;
   when using ADAM you will probably need to play with other parameters to get good results, especially
@@ -208,17 +209,19 @@ path or a full absolute path.
 **Other options**:
 * `-style_scale`: Scale at which to extract features from the style image. Default is 1.0.
 * `-original_colors`: If you set this to 1, then the output image will keep the colors of the content image.
-* `-model_file`: Path to the `.pth` file for the VGG Caffe model which was converted to PyTorch.
-  Default is the original VGG-19 model; you can also try the original VGG-16 model.
+* `-model_file`: Path to the `.pth` file for the VGG Caffe model. Default is the original VGG-19 model; you can also try the original VGG-16 model.
 * `-pooling`: The type of pooling layers to use; one of `max` or `avg`. Default is `max`.
   The VGG-19 models uses max pooling layers, but the paper mentions that replacing these layers with average
   pooling layers can improve the results. I haven't been able to get good results using average pooling, but
   the option is here.
+* `-seed`: An integer value that you can specify for repeatable results. By default this value is random for each run.
+* `-multidevice_strategy`: A comma-separated list of layer indices at which to split the network. The `-gpu` parameter requires a comma-separated list of zero-indexed GPU IDs and `c` for the CPU, in order to use the `-multidevice_strategy` parameter.
 * `-backend`: `nn`, `cudnn`, or `mkl`. Default is `nn`.
   `mkl` requires Intel's MKL backend.
 * `-cudnn_autotune`: When using the cuDNN backend, pass this flag to use the built-in cuDNN autotuner to select
   the best convolution algorithms for your architecture. This will make the first iteration a bit slower and can
   take a bit more memory, but may significantly speed up the cuDNN backend.
+* `-download_models`: Path to where the VGG-19, VGG-16, and NIN models will be downloaded to. If no path is specified, the models will be downloaded to your home directory. 
 
 ## Frequently Asked Questions
 
