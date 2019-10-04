@@ -188,6 +188,7 @@ path or a full absolute path.
 * `-init`: Method for generating the generated image; one of `random` or `image`.
   Default is `random` which uses a noise initialization as in the paper; `image`
   initializes with the content image.
+* `-init_image`: Replaces the initialization image with a user specified image. 
 * `-optimizer`: The optimization algorithm to use; either `lbfgs` or `adam`; default is `lbfgs`.
   L-BFGS tends to give better results, but uses more memory. Switching to ADAM will reduce memory usage;
   when using ADAM you will probably need to play with other parameters to get good results, especially
