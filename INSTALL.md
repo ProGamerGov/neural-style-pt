@@ -189,7 +189,7 @@ If you wish to install PyTorch on Windows From Source or via Conda, you can find
 
 ### Github and pip
 
-First, you will need to download Python 3 and install it: https://www.python.org/downloads/windows/
+First, you will need to download Python 3 and install it: https://www.python.org/downloads/windows/. I recommend using the executable installer for the latest version of Python 3.
 
 Then using https://pytorch.org/, get the correct pip command, paste it into the Command Prompt (CMD) and hit enter:
 
