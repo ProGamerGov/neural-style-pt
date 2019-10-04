@@ -174,7 +174,7 @@ path or a full absolute path.
 * `-style_blend_weights`: The weight for blending the style of multiple style images, as a
   comma-separated list, such as `-style_blend_weights 3,7`. By default all style images
   are equally weighted.
-* `-gpu`: Zero-indexed ID of the GPU to use; for CPU mode set `-gpu` to `c`. For multiple devices, use a comma-separated list of zero-indexed GPU IDs and `c` for the CPU.
+* `-gpu`: Zero-indexed ID of the GPU to use; for CPU mode set `-gpu` to `c`.
 
 **Optimization options**:
 * `-content_weight`: How much to weight the content reconstruction term. Default is 5e0.
@@ -212,7 +212,7 @@ path or a full absolute path.
   pooling layers can improve the results. I haven't been able to get good results using average pooling, but
   the option is here.
 * `-seed`: An integer value that you can specify for repeatable results. By default this value is random for each run.
-* `-multidevice_strategy`: A comma-separated list of layer indices at which to split the network.
+* `-multidevice_strategy`: A comma-separated list of layer indices at which to split the network. The `-gpu` requires a comma-separated list of zero-indexed GPU IDs and `c` for the CPU, to use the `-multidevice_strategy` parameter.
 * `-backend`: `nn`, `cudnn`, or `mkl`. Default is `nn`.
   `mkl` requires Intel's MKL backend.
 * `-cudnn_autotune`: When using the cuDNN backend, pass this flag to use the built-in cuDNN autotuner to select
