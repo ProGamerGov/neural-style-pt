@@ -1,6 +1,6 @@
 # neural-style-pt Installation
 
-This guide will walk you through the setup for `neural-style-pt` on Ubuntu. If you wish to install PyTorch on a different operating system like Windows or MacOS, installation guides can be found [here](https://pytorch.org). 
+This guide will walk you through the setup for `neural-style-pt` on Ubuntu and Windows. If you wish to install PyTorch and neural-style-pt on a different operating system like MacOS, installation guides can be found [here](https://pytorch.org). 
 
 Note that in order to reduce their size, the pre-packaged binary releases (pip, Conda, etc...) have removed support for some older GPUs, and thus you will have to install from source in order to use these GPUs. 
 
@@ -181,6 +181,10 @@ To quit just type `exit()` or use  Ctrl-D.
 
 # Windows Installation
 
+If you wish to install PyTorch on Windows From Source or via Conda, you can find instructions on the PyTorch website: https://pytorch.org/ 
+
+
+### Github and pip
 
 First, you will need to download Python 3 and install it: https://www.python.org/downloads/windows/
 
