@@ -1,6 +1,6 @@
 # neural-style-pt Installation
 
-This guide will walk you through the setup for `neural-style-pt` on Ubuntu and Windows. If you wish to install PyTorch and neural-style-pt on a different operating system like MacOS, installation guides can be found [here](https://pytorch.org). 
+This guide will walk you through multiple ways to setup `neural-style-pt` on Ubuntu and Windows. If you wish to install PyTorch and neural-style-pt on a different operating system like MacOS, installation guides can be found [here](https://pytorch.org). 
 
 Note that in order to reduce their size, the pre-packaged binary releases (pip, Conda, etc...) have removed support for some older GPUs, and thus you will have to install from source in order to use these GPUs. 
 
@@ -204,12 +204,12 @@ Then copy the file path to your neural-style-pt folder, and paste it into the Co
 In the example below, the neural-style-pt folder was placed on the desktop:
 
 ```
-cd C:\Users\<Computer_Name>\Desktop\neural-style-pt-master
+cd C:\Users\<User_Name>\Desktop\neural-style-pt-master
 ```
 
 You can now continue on to [installing neural-style-pt](https://github.com/ProGamerGov/neural-style-pt/blob/master/INSTALL.md#install-neural-style-pt), skipping the `git clone` step. 
 
-## Install neural-style-pt
+# Install neural-style-pt
 
 First we clone `neural-style-pt` from GitHub:
 
