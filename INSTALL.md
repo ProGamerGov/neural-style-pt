@@ -189,7 +189,7 @@ If you wish to install PyTorch on Windows From Source or via Conda, you can find
 
 First, you will need to download Python 3 and install it: https://www.python.org/downloads/windows/
 
-Then using https://pytorch.org/, get the correct pip command, paste it into the Windows CMD terminal and hit enter:
+Then using https://pytorch.org/, get the correct pip command, paste it into the Command Prompt (CMD) and hit enter:
 
 
 ```
@@ -197,14 +197,14 @@ pip3 install torch===1.2.0 torchvision===0.4.0 -f https://download.pytorch.org/w
 ```
 
 
-After that download the neural-style-pt Github respository and extract/unzip it.
+After installing PyTorch, download the neural-style-pt Github respository and extract/unzip it to the desired location.
 
-Then copy the file path to your neural-style-pt folder, and paste it into the CMD terminal, with `cd` in front of it and then hit enter.
+Then copy the file path to your neural-style-pt folder, and paste it into the Command Prompt, with `cd` in front of it and then hit enter.
 
 In the example below, the neural-style-pt folder was placed on the desktop:
 
 ```
->cd C:\Users\<Computer_Name>\Desktop\neural-style-pt-master
+cd C:\Users\<Computer_Name>\Desktop\neural-style-pt-master
 ```
 
 You can now continue on to [installing neural-style-pt](https://github.com/ProGamerGov/neural-style-pt/blob/master/INSTALL.md#install-neural-style-pt), skipping the `git clone` step. 
