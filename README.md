@@ -212,7 +212,7 @@ path or a full absolute path.
   pooling layers can improve the results. I haven't been able to get good results using average pooling, but
   the option is here.
 * `-seed`: An integer value that you can specify for repeatable results. By default this value is random for each run.
-* `-multidevice_strategy`: A comma-separated list of layer indices at which to split the network. The `-gpu` requires a comma-separated list of zero-indexed GPU IDs and `c` for the CPU, to use the `-multidevice_strategy` parameter.
+* `-multidevice_strategy`: A comma-separated list of layer indices at which to split the network. The `-gpu` requires a comma-separated list of zero-indexed GPU IDs and `c` for the CPU, in order to use the `-multidevice_strategy` parameter.
 * `-backend`: `nn`, `cudnn`, or `mkl`. Default is `nn`.
   `mkl` requires Intel's MKL backend.
 * `-cudnn_autotune`: When using the cuDNN backend, pass this flag to use the built-in cuDNN autotuner to select
