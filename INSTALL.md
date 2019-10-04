@@ -59,6 +59,8 @@ cd ~/
 pip3 install torch torchvision
 ```
 
+Now continue on to [installing neural-style-pt](https://github.com/ProGamerGov/neural-style-pt/blob/master/INSTALL.md#install-neural-style-pt) to install neural-style-pt.
+
 ### Conda:
 
 Following the Conda installation instructions
