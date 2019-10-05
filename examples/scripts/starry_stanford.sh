@@ -15,7 +15,12 @@ PYTHON=python3 # Change to Python if using Python 2
 SCRIPT=neural_style.py
 GPU=0
 
-NEURAL_STYLE=$PYTHON+" "+$SCRIPT # Change to neural-style if using pip package
+NEURAL_STYLE=$PYTHON
+NEURAL_STYLE+=" "
+NEURAL_STYLE+=$SCRIPT
+
+# Uncomment if using pip package
+#NEURAL_STYLE=neural-style
 
 
 $NEURAL_STYLE \
