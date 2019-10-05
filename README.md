@@ -290,6 +290,13 @@ generation as described in the paper
 <a href="https://arxiv.org/abs/1611.07865">**Controlling Perceptual Factors in Neural Style Transfer**</a> by Leon A. Gatys, 
 Alexander S. Ecker, Matthias Bethge, Aaron Hertzmann and Eli Shechtman.
 
+
+Here is a  x  image generated on a server with eight Tesla K80 GPUs:
+
+<img src="" height="400px">
+
+The script used to generate this image <a href='examples/scripts/starry_stanford_bigger.sh'>can be found here</a>.
+
 ## Implementation details
 Images are initialized with white noise and optimized using L-BFGS.
 
