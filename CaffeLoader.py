@@ -101,28 +101,28 @@ class NIN(nn.Module):
             nn.Softmax(),
         )
 
-        
+
 class ModelParallel(nn.Module):
     def __init__(self, chunks, device_list):
         super(ModelParallel, self).__init__()
         self.chunks = chunks
         self.device_list = device_list
-               
+
     def c(self, input, i):
         if input.type() == 'torch.FloatTensor' and 'cuda' in self.device_list[i]:
             input = input.type('torch.cuda.FloatTensor')
         elif input.type() == 'torch.cuda.FloatTensor' and 'cpu' in self.device_list[i]:
             input = input.type('torch.FloatTensor')
         return input
-        
+
     def forward(self, input):
         for i, chunk in enumerate(self.chunks):
             if i < len(self.chunks) -1:
                 input = self.c(chunk(self.c(input, i).to(self.device_list[i])), i+1).to(self.device_list[i+1])
-            else: 
+            else:
                 input = chunk(input)
         return input
-      
+
 
 
 def buildSequential(channel_list, pooling):
@@ -132,7 +132,7 @@ def buildSequential(channel_list, pooling):
         pool2d = nn.MaxPool2d(kernel_size=2, stride=2)
     elif pooling == 'avg':
         pool2d = nn.AvgPool2d(kernel_size=2, stride=2)
-    else: 
+    else:
         raise ValueError("Unrecognized pooling parameter")
     for c in channel_list:
         if c == 'P':
@@ -151,7 +151,7 @@ channel_list = {
 }
 
 nin_dict = {
-'C': ['conv1', 'cccp1', 'cccp2', 'conv2', 'cccp3', 'cccp4', 'conv3', 'cccp5', 'cccp6', 'conv4-1024', 'cccp7-1024', 'cccp8-1024'], 
+'C': ['conv1', 'cccp1', 'cccp2', 'conv2', 'cccp3', 'cccp4', 'conv3', 'cccp5', 'cccp6', 'conv4-1024', 'cccp7-1024', 'cccp8-1024'],
 'R': ['relu0', 'relu1', 'relu2', 'relu3', 'relu5', 'relu6', 'relu7', 'relu8', 'relu9', 'relu10', 'relu11', 'relu12'],
 'P': ['pool1', 'pool2', 'pool3', 'pool4'],
 'D': ['drop'],
@@ -190,7 +190,7 @@ def modelSelector(model_file, pooling):
             print("VGG-16 Architecture Detected")
             cnn, layerList = VGG(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
         else:
-            raise ValueError("VGG architecture not recognized.")    
+            raise ValueError("VGG architecture not recognized.")
     elif "nin" in model_file:
         print("NIN Architecture Detected")
         cnn, layerList = NIN(pooling), nin_dict
@@ -199,7 +199,7 @@ def modelSelector(model_file, pooling):
     return cnn, layerList
 
 # Print like Torch7/loadcaffe
-def print_loadcaffe(cnn, layerList): 
+def print_loadcaffe(cnn, layerList):
     c = 0
     for l in list(cnn):
          if "Conv2d" in str(l):
@@ -210,16 +210,16 @@ def print_loadcaffe(cnn, layerList):
              break
 
 # Load the model, and configure pooling layer type
-def loadCaffemodel(model_file, pooling, use_gpu, disable_check):  
+def loadCaffemodel(model_file, pooling, use_gpu, disable_check):
     cnn, layerList = modelSelector(str(model_file).lower(), pooling)
-    
+
     cnn.load_state_dict(torch.load(model_file), strict=(not disable_check))
     print("Successfully loaded " + str(model_file))
 
     # Maybe convert the model to cuda now, to avoid later issues
     if "c" not in str(use_gpu) or 'c' not in str(use_gpu[0]).lower():
         cnn = cnn.cuda()
-    cnn = cnn.features 
+    cnn = cnn.features
 
     print_loadcaffe(cnn, layerList)
 

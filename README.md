@@ -12,7 +12,7 @@ onto a night-time photograph of the Stanford campus:
  <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/inputs/starry_night_google.jpg" height="223px">
  <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/inputs/hoovertowernight.jpg" height="223px">
  <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/outputs/starry_stanford_big.png" width="710px">
-</div> 
+</div>
 
 Applying the style of different images to the same content image gives interesting results.
 Here we reproduce Figure 2 from the paper, which renders a photograph of the Tubingen in Germany in a
@@ -185,7 +185,7 @@ path or a full absolute path.
 * `-init`: Method for generating the generated image; one of `random` or `image`.
   Default is `random` which uses a noise initialization as in the paper; `image`
   initializes with the content image.
-* `-init_image`: Replaces the initialization image with a user specified image. 
+* `-init_image`: Replaces the initialization image with a user specified image.
 * `-optimizer`: The optimization algorithm to use; either `lbfgs` or `adam`; default is `lbfgs`.
   L-BFGS tends to give better results, but uses more memory. Switching to ADAM will reduce memory usage;
   when using ADAM you will probably need to play with other parameters to get good results, especially
@@ -250,7 +250,7 @@ By default, `neural-style-pt` uses the `nn` backend for convolutions and L-BFGS 
   This should work in both CPU and GPU modes.
 * **Reduce image size**: If the above tricks are not enough, you can reduce the size of the generated image;
   pass the flag `-image_size 256` to generate an image at half the default size.
-  
+
 With the default settings, neural-style-pt uses about 3.7 GB of GPU memory on my system; switching to ADAM and cuDNN reduces the GPU memory footprint to about 1GB.
 
 ## Speed
@@ -270,7 +270,7 @@ Here are the same benchmarks on a GTX 1080:
 * `-backend cudnn -optimizer adam`: 40 seconds
 * `-backend cudnn -cudnn_autotune -optimizer lbfgs`: 23 seconds
 * `-backend cudnn -cudnn_autotune -optimizer adam`: 24 seconds
-  
+
 ## Implementation details
 Images are initialized with white noise and optimized using L-BFGS.
 
