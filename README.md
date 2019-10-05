@@ -12,7 +12,7 @@ onto a night-time photograph of the Stanford campus:
  <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/inputs/starry_night_google.jpg" height="223px">
  <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/inputs/hoovertowernight.jpg" height="223px">
  <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/outputs/starry_stanford_bigger.png" width="710px">
-</div> 
+</div>
 
 Applying the style of different images to the same content image gives interesting results.
 Here we reproduce Figure 2 from the paper, which renders a photograph of the Tubingen in Germany in a
@@ -140,7 +140,7 @@ After installing neural-style-pt, you'll need to run the following script to dow
 neural-style -download_models
 ```
 
-By default the models are downloaded to your home directory, but you can specify a download location with: 
+By default the models are downloaded to your home directory, but you can specify a download location with:
 
 ```
 neural-style -download_models <download_path>
@@ -188,7 +188,7 @@ path or a full absolute path.
 * `-init`: Method for generating the generated image; one of `random` or `image`.
   Default is `random` which uses a noise initialization as in the paper; `image`
   initializes with the content image.
-* `-init_image`: Replaces the initialization image with a user specified image. 
+* `-init_image`: Replaces the initialization image with a user specified image.
 * `-optimizer`: The optimization algorithm to use; either `lbfgs` or `adam`; default is `lbfgs`.
   L-BFGS tends to give better results, but uses more memory. Switching to ADAM will reduce memory usage;
   when using ADAM you will probably need to play with other parameters to get good results, especially
@@ -221,7 +221,7 @@ path or a full absolute path.
 * `-cudnn_autotune`: When using the cuDNN backend, pass this flag to use the built-in cuDNN autotuner to select
   the best convolution algorithms for your architecture. This will make the first iteration a bit slower and can
   take a bit more memory, but may significantly speed up the cuDNN backend.
-* `-download_models`: Path to where the VGG-19, VGG-16, and NIN models will be downloaded to. If no path is specified, the models will be downloaded to your home directory. 
+* `-download_models`: Path to where the VGG-19, VGG-16, and NIN models will be downloaded to. If no path is specified, the models will be downloaded to your home directory.
 
 ## Frequently Asked Questions
 
@@ -240,7 +240,7 @@ If you are running on a GPU, you can also try running with `-backend cudnn` to r
 `Missing key(s) in state_dict: "classifier.0.bias", "classifier.0.weight", "classifier.3.bias", "classifier.3.weight".
         Unexpected key(s) in state_dict: "classifier.1.weight", "classifier.1.bias", "classifier.4.weight", "classifier.4.bias".`
 
-**Solution:** Due to a mix up with layer locations, older models require a fix to be compatible with newer versions of PyTorch. Donwloading the models with `neural-style -download_models` will automatically perform these fixes after downloading the models. You can find other compatible models [here](https://github.com/ProGamerGov/neural-style-pt/wiki/Other-Models). 
+**Solution:** Due to a mix up with layer locations, older models require a fix to be compatible with newer versions of PyTorch. Donwloading the models with `neural-style -download_models` will automatically perform these fixes after downloading the models. You can find other compatible models [here](https://github.com/ProGamerGov/neural-style-pt/wiki/Other-Models).
 
 
 
@@ -254,7 +254,7 @@ By default, `neural-style-pt` uses the `nn` backend for convolutions and L-BFGS 
   This should work in both CPU and GPU modes.
 * **Reduce image size**: If the above tricks are not enough, you can reduce the size of the generated image;
   pass the flag `-image_size 256` to generate an image at half the default size.
-  
+
 With the default settings, neural-style-pt uses about 3.7 GB of GPU memory on my system; switching to ADAM and cuDNN reduces the GPU memory footprint to about 1GB.
 
 ## Speed
@@ -274,7 +274,7 @@ Here are the same benchmarks on a GTX 1080:
 * `-backend cudnn -optimizer adam`: 40 seconds
 * `-backend cudnn -cudnn_autotune -optimizer lbfgs`: 23 seconds
 * `-backend cudnn -cudnn_autotune -optimizer adam`: 24 seconds
-  
+
 ## Multi-GPU scaling
 You can use multiple CPU and GPU devices to process images at higher resolutions; different layers of the network will be
 computed on different devices. You can control which GPU and CPU devices are used with the `-gpu` flag, and you can control
@@ -284,7 +284,7 @@ For example in a server with four GPUs, you can give the flag `-gpu 0,1,2,3` to 
 
 We can achieve very high quality results at high resolution by combining multi-GPU processing with multiscale
 generation as described in the paper
-<a href="https://arxiv.org/abs/1611.07865">**Controlling Perceptual Factors in Neural Style Transfer**</a> by Leon A. Gatys, 
+<a href="https://arxiv.org/abs/1611.07865">**Controlling Perceptual Factors in Neural Style Transfer**</a> by Leon A. Gatys,
 Alexander S. Ecker, Matthias Bethge, Aaron Hertzmann and Eli Shechtman.
 
 
