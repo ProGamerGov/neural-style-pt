@@ -5,12 +5,12 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="neural-style",
-    version="0.4.5",
+    version="0.4.6",
     author="ProGamerGov",
     description="A PyTorch implementation of artistic style transfer",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    keywords='neural artistic style neural-style neural-style-pt pytorch style transfer style-transfer pytorch-style-transfer nst neural-style-transfer deepstyle deep-style mlart machine-learning-art aiart ai-art',
+    keywords='neural artistic style neural-style neural-style-pt pytorch style transfer style-transfer pytorch-style-transfer neuralart neural-art nst neural-style-transfer deepstyle deep-style mlart machine-learning-art aiart ai-art gatys justin-johnson torch deepdream',
     scripts=['neural-style'],
     url="https://github.com/ProGamerGov/neural-style-pt/tree/pip-master/",
     packages=setuptools.find_packages(),
