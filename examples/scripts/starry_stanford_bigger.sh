@@ -83,3 +83,18 @@ $PYTHON neural_style.py \
   -gpu 0,1,2,3 \
   -multidevice_strategy 3,6,12 \
   -backend cudnn
+  
+$PYTHON neural_style.py \
+  -content_image $CONTENT_IMAGE \
+  -style_image $STYLE_IMAGE \
+  -init image -init_image out5.png \
+  -style_scale $STYLE_SCALE \
+  -print_iter 1 \
+  -style_weight $STYLE_WEIGHT \
+  -image_size 4016 \
+  -num_iterations 200 \
+  -output_image out6.png \
+  -tv_weight 0 \
+  -gpu 0,1,2,3,4,5,6,7 \
+  -multidevice_strategy 2,4,6,9,15,18,23 \
+  -backend cudnn
