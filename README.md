@@ -291,7 +291,7 @@ generation as described in the paper
 Alexander S. Ecker, Matthias Bethge, Aaron Hertzmann and Eli Shechtman.
 
 
-Here is a 4016 x  image generated on a server with eight Tesla K80 GPUs:
+Here is a 4016 x 2213 image generated on a server with eight Tesla K80 GPUs:
 
 <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/outputs/starry_stanford_bigger.png" height="400px">
 
