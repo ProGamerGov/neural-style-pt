@@ -9,7 +9,7 @@ CONTENT_IMAGE=examples/inputs/hoovertowernight.jpg
 STYLE_WEIGHT=5e2
 STYLE_SCALE=1.0
 
-STYLE_WEIGHT2=2500 # Style weight for image 2048 and above
+STYLE_WEIGHT2=2500 # Style weight for image size 2048 and above
 
 PYTHON=python3 # Change to Python if using Python 2
 SCRIPT=neural_style.py
