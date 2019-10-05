@@ -10,10 +10,11 @@ STYLE_WEIGHT=5e2
 STYLE_SCALE=1.0
 
 PYTHON=python
+SCRIPT=neural_style.py
 GPU=0
 
 
-$PYTHON neural_style.py \
+$PYTHON $SCRIPT \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
   -style_scale $STYLE_SCALE \
@@ -25,7 +26,7 @@ $PYTHON neural_style.py \
   -gpu $GPU \
   -backend cudnn -cudnn_autotune
 
-$PYTHON neural_style.py \
+$PYTHON $SCRIPT \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
   -init image -init_image out1.png \
@@ -39,7 +40,7 @@ $PYTHON neural_style.py \
   -gpu $GPU \
   -backend cudnn -cudnn_autotune
 
-$PYTHON neural_style.py \
+$PYTHON $SCRIPT \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
   -init image -init_image out2.png \
@@ -55,7 +56,7 @@ $PYTHON neural_style.py \
 
 STYLE_WEIGHT=2500
 
-$PYTHON neural_style.py \
+$PYTHON $SCRIPT \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
   -init image -init_image out3.png \
@@ -69,7 +70,7 @@ $PYTHON neural_style.py \
   -gpu $GPU \
   -backend cudnn
 
-$PYTHON neural_style.py \
+$PYTHON $SCRIPT \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
   -init image -init_image out4.png \
@@ -84,7 +85,7 @@ $PYTHON neural_style.py \
   -multidevice_strategy 3,6,12 \
   -backend cudnn
   
-$PYTHON neural_style.py \
+$PYTHON $SCRIPT \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
   -init image -init_image out5.png \
@@ -96,5 +97,5 @@ $PYTHON neural_style.py \
   -output_image out6.png \
   -tv_weight 0 \
   -gpu 0,1,2,3,4,5,6,7 \
-  -multidevice_strategy 2,4,6,9,15,18,23 \
+  -multidevice_strategy 2,4,6,9,15,18,22 \
   -backend cudnn
