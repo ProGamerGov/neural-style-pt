@@ -11,7 +11,7 @@ onto a night-time photograph of the Stanford campus:
 <div align="center">
  <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/inputs/starry_night_google.jpg" height="223px">
  <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/inputs/hoovertowernight.jpg" height="223px">
- <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/outputs/starry_stanford_big.png" width="710px">
+ <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/outputs/starry_stanford_bigger.png" width="710px">
 </div> 
 
 Applying the style of different images to the same content image gives interesting results.
@@ -215,7 +215,7 @@ path or a full absolute path.
   pooling layers can improve the results. I haven't been able to get good results using average pooling, but
   the option is here.
 * `-seed`: An integer value that you can specify for repeatable results. By default this value is random for each run.
-* `-multidevice_strategy`: A comma-separated list of layer indices at which to split the network. The `-gpu` parameter requires a comma-separated list of zero-indexed GPU IDs and `c` for the CPU, in order to use the `-multidevice_strategy` parameter.
+* `-multidevice_strategy`: A comma-separated list of layer indices at which to split the network when using multiple devices. See [Multi-GPU scaling](https://github.com/ProGamerGov/neural-style-pt/tree/pip-master#multi-gpu-scaling) for more details.
 * `-backend`: `nn`, `cudnn`, or `mkl`. Default is `nn`.
   `mkl` requires Intel's MKL backend.
 * `-cudnn_autotune`: When using the cuDNN backend, pass this flag to use the built-in cuDNN autotuner to select
@@ -275,6 +275,25 @@ Here are the same benchmarks on a GTX 1080:
 * `-backend cudnn -cudnn_autotune -optimizer lbfgs`: 23 seconds
 * `-backend cudnn -cudnn_autotune -optimizer adam`: 24 seconds
   
+## Multi-GPU scaling
+You can use multiple CPU and GPU devices to process images at higher resolutions; different layers of the network will be
+computed on different devices. You can control which GPU and CPU devices are used with the `-gpu` flag, and you can control
+how to split layers across devices using the `-multidevice_strategy` flag.
+
+For example in a server with four GPUs, you can give the flag `-gpu 0,1,2,3` to process on GPUs 0, 1, 2, and 3 in that order; by also giving the flag `-multidevice_strategy 3,6,12` you indicate that the first two layers should be computed on GPU 0, layers 3 to 5 should be computed on GPU 1, layers 6 to 11 should be computed on GPU 2, and the remaining layers should be computed on GPU 3. You will need to tune the `-multidevice_strategy` for your setup in order to achieve maximal resolution.
+
+We can achieve very high quality results at high resolution by combining multi-GPU processing with multiscale
+generation as described in the paper
+<a href="https://arxiv.org/abs/1611.07865">**Controlling Perceptual Factors in Neural Style Transfer**</a> by Leon A. Gatys, 
+Alexander S. Ecker, Matthias Bethge, Aaron Hertzmann and Eli Shechtman.
+
+
+Here is a 4016 x 2213 image generated on a server with eight Tesla K80 GPUs:
+
+<img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/outputs/starry_stanford_bigger.png" height="400px">
+
+The script used to generate this image <a href='examples/scripts/starry_stanford_bigger.sh'>can be found here</a>.
+
 ## Implementation details
 Images are initialized with white noise and optimized using L-BFGS.
 
