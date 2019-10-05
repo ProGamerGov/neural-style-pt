@@ -7,14 +7,17 @@ STYLE_IMAGE=starry_night_gigapixel.jpg
 CONTENT_IMAGE=examples/inputs/hoovertowernight.jpg
 
 STYLE_WEIGHT=5e2
+STYLE_WEIGHT2=2500
 STYLE_SCALE=1.0
 
-PYTHON=python
+PYTHON=python3 # Change to Python if using Python 2
 SCRIPT=neural_style.py
 GPU=0
 
+NEURAL_STYLE=$PYTHON+" "+$SCRIPT # Change to neural-style if using pip package
 
-$PYTHON $SCRIPT \
+
+$NEURAL_STYLE \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
   -style_scale $STYLE_SCALE \
@@ -26,7 +29,7 @@ $PYTHON $SCRIPT \
   -gpu $GPU \
   -backend cudnn -cudnn_autotune
 
-$PYTHON $SCRIPT \
+$NEURAL_STYLE \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
   -init image -init_image out1.png \
@@ -40,7 +43,7 @@ $PYTHON $SCRIPT \
   -gpu $GPU \
   -backend cudnn -cudnn_autotune
 
-$PYTHON $SCRIPT \
+$NEURAL_STYLE \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
   -init image -init_image out2.png \
@@ -54,15 +57,13 @@ $PYTHON $SCRIPT \
   -gpu $GPU \
   -backend cudnn -cudnn_autotune
 
-STYLE_WEIGHT=2500
-
-$PYTHON $SCRIPT \
+$NEURAL_STYLE \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
   -init image -init_image out3.png \
   -style_scale $STYLE_SCALE \
   -print_iter 1 \
-  -style_weight $STYLE_WEIGHT \
+  -style_weight $STYLE_WEIGHT2 \
   -image_size 2048 \
   -num_iterations 200 \
   -output_image out4.png \
@@ -70,13 +71,13 @@ $PYTHON $SCRIPT \
   -gpu $GPU \
   -backend cudnn
 
-$PYTHON $SCRIPT \
+$NEURAL_STYLE \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
   -init image -init_image out4.png \
   -style_scale $STYLE_SCALE \
   -print_iter 1 \
-  -style_weight $STYLE_WEIGHT \
+  -style_weight $STYLE_WEIGHT2 \
   -image_size 3620 \
   -num_iterations 200 \
   -output_image out5.png \
@@ -85,13 +86,13 @@ $PYTHON $SCRIPT \
   -multidevice_strategy 3,6,12 \
   -backend cudnn
   
-$PYTHON $SCRIPT \
+$NEURAL_STYLE \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
   -init image -init_image out5.png \
   -style_scale $STYLE_SCALE \
   -print_iter 1 \
-  -style_weight $STYLE_WEIGHT \
+  -style_weight $STYLE_WEIGHT2 \
   -image_size 4016 \
   -num_iterations 200 \
   -output_image out6.png \
