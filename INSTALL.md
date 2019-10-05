@@ -1,9 +1,11 @@
 # neural-style-pt Installation
 
-This guide will walk you through the setup for `neural-style-pt` on Ubuntu. If you wish to install PyTorch on a different operating system like Windows or MacOS, installation guides can be found [here](https://pytorch.org). 
+This guide will walk you through multiple ways to setup `neural-style-pt` on Ubuntu and Windows. If you wish to install PyTorch and neural-style-pt on a different operating system like MacOS, installation guides can be found [here](https://pytorch.org). 
 
 Note that in order to reduce their size, the pre-packaged binary releases (pip, Conda, etc...) have removed support for some older GPUs, and thus you will have to install from source in order to use these GPUs. 
 
+
+# Ubuntu:
 
 ## With A Package Manager:
 
@@ -47,17 +49,17 @@ Following the pip installation instructions
 ```
 # in a terminal, run the commands
 cd ~/
-pip install torch 
-pip install torchvision 
+pip install torch torchvision 
 ```
 
 Or:
 
 ```
 cd ~/
-pip3 install torch 
-pip3 install torchvision 
+pip3 install torch torchvision
 ```
+
+Now continue on to [installing neural-style-pt](https://github.com/ProGamerGov/neural-style-pt/blob/master/INSTALL.md#install-neural-style-pt) to install neural-style-pt.
 
 ### Conda:
 
@@ -68,6 +70,7 @@ Following the Conda installation instructions
 conda install pytorch torchvision -c pytorch
 ```
 
+Now continue on to [installing neural-style-pt](https://github.com/ProGamerGov/neural-style-pt/blob/master/INSTALL.md#install-neural-style-pt) to install neural-style-pt.
 
 ## From Source:
 
@@ -80,14 +83,14 @@ First download and unpack the local CUDA installer from NVIDIA; note that there 
 installers for each recent version of Ubuntu:
 
 ```
-# For Ubuntu 17.0.4
-sudo dpkg -i cuda-repo-ubuntu1704-9-1-local_9.1.85-1_amd64.deb
+# For Ubuntu 18.04
+sudo dpkg -i cuda-repo-ubuntu1804-10-1-local-10.1.243-418.87.00_1.0-1_amd64.deb
 sudo apt-key add /var/cuda-repo-<version>/7fa2af80.pub
 ```
 
 ```
-# For Ubuntu 16.0.4
-sudo dpkg -i cuda-repo-ubuntu1604-9-1-local_9.1.85-1_amd64.deb
+# For Ubuntu 16.04
+sudo dpkg -i cuda-repo-ubuntu1604-10-1-local-10.1.243-418.87.00_1.0-1_amd64.deb
 sudo apt-key add /var/cuda-repo-<version>/7fa2af80.pub
 ```
 
@@ -134,9 +137,9 @@ After registering as a developer with NVIDIA, you can [download cuDNN here](http
 After dowloading, you can unpack and install cuDNN like this:
 
 ```
-tar -xvzf cudnn-9.1-linux-x64-v7.1.tgz
-sudo cp cuda/lib64/libcudnn* /usr/local/cuda-9.1/lib64/
-sudo cp cuda/include/cudnn.h /usr/local/cuda-9.1/include/
+tar -zxvf cudnn-10.1-linux-x64-v7.5.0.56.tgz
+sudo cp cuda/lib64/libcudnn* /usr/local/cuda/lib64
+sudo cp cuda/include/cudnn.h /usr/local/cuda/include
 ```
 
 Note that the cuDNN backend can only be used for GPU mode.
@@ -149,7 +152,7 @@ https://rocm.github.io/pytorch.html
 
 - Supported AMD GPUs for the dockerfile are: Vega10 / gfx900 generation discrete graphics cards (Vega56, Vega64, or MI25).
 
-PyTorch does not officially provide support for compilation on the host, but [a user guide posted here](https://github.com/ROCmSoftwarePlatform/pytorch/issues/337#issuecomment-467220107) apparently works well.
+PyTorch does not officially provide support for compilation on the host with AMD GPUs, but [a user guide posted here](https://github.com/ROCmSoftwarePlatform/pytorch/issues/337#issuecomment-467220107) apparently works well.
 
 ROCm utilizes a CUDA porting tool called HIP, which automatically converts CUDA code into HIP code. HIP code can run on both AMD and Nvidia GPUs. 
 
@@ -176,8 +179,39 @@ You can then type `print(torch.version.cuda)` and `print(torch.backends.cudnn.ve
 
 To quit just type `exit()` or use  Ctrl-D.
 
+Now continue on to [installing neural-style-pt](https://github.com/ProGamerGov/neural-style-pt/blob/master/INSTALL.md#install-neural-style-pt) to install neural-style-pt.
 
-## Install neural-style-pt
+
+# Windows Installation
+
+If you wish to install PyTorch on Windows From Source or via Conda, you can find instructions on the PyTorch website: https://pytorch.org/ 
+
+
+### Github and pip
+
+First, you will need to download Python 3 and install it: https://www.python.org/downloads/windows/. I recommend using the executable installer for the latest version of Python 3.
+
+Then using https://pytorch.org/, get the correct pip command, paste it into the Command Prompt (CMD) and hit enter:
+
+
+```
+pip3 install torch===1.2.0 torchvision===0.4.0 -f https://download.pytorch.org/whl/torch_stable.html
+```
+
+
+After installing PyTorch, download the neural-style-pt Github respository and extract/unzip it to the desired location.
+
+Then copy the file path to your neural-style-pt folder, and paste it into the Command Prompt, with `cd` in front of it and then hit enter.
+
+In the example below, the neural-style-pt folder was placed on the desktop:
+
+```
+cd C:\Users\<User_Name>\Desktop\neural-style-pt-master
+```
+
+You can now continue on to [installing neural-style-pt](https://github.com/ProGamerGov/neural-style-pt/blob/master/INSTALL.md#install-neural-style-pt), skipping the `git clone` step. 
+
+# Install neural-style-pt
 
 First we clone `neural-style-pt` from GitHub:
 
