@@ -280,7 +280,7 @@ For example in a server with four GPUs, you can give the flag `-gpu 0,1,2,3` to 
 
 We can achieve very high quality results at high resolution by combining multi-GPU processing with multiscale
 generation as described in the paper
-<a href="https://arxiv.org/abs/1611.07865">**Controlling Perceptual Factors in Neural Style Transfer**</a> by Leon A. Gatys, 
+<a href="https://arxiv.org/abs/1611.07865">**Controlling Perceptual Factors in Neural Style Transfer**</a> by Leon A. Gatys,
 Alexander S. Ecker, Matthias Bethge, Aaron Hertzmann and Eli Shechtman.
 
 
