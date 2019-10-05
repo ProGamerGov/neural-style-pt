@@ -271,6 +271,25 @@ Here are the same benchmarks on a GTX 1080:
 * `-backend cudnn -cudnn_autotune -optimizer lbfgs`: 23 seconds
 * `-backend cudnn -cudnn_autotune -optimizer adam`: 24 seconds
 
+## Multi-GPU scaling
+You can use multiple CPU and GPU devices to process images at higher resolutions; different layers of the network will be
+computed on different devices. You can control which GPU and CPU devices are used with the `-gpu` flag, and you can control
+how to split layers across devices using the `-multidevice_strategy` flag.
+
+For example in a server with four GPUs, you can give the flag `-gpu 0,1,2,3` to process on GPUs 0, 1, 2, and
+3 in that order; by also giving the flag `-multidevice_strategy 3,6,12` you indicate that the first two layers
+should be computed on GPU 0, layers 3 to 5 should be computed on GPU 1, layers 6 to 11 should be computed on
+GPU 2, and the remaining layers should be computed on GPU 3. 
+
+You can also for example, compute the first layer on the CPU, then compute the others layers on GPU 0 with the flag `-gpu c,0` and the flag `-multidevice_strategy 1`. It is also possible to have a device compute multiple separate sets of layers. For example, you can use the flag `-gpu 0,1,0` and the flag `-multidevice_strategy 6,12`, to compute layers 1-5 and layers 12 and above on GPU 0, and layers 6-11 on GPU 1. 
+
+You will need to tune the `-multidevice_strategy` for your setup in order to achieve maximal resolution.
+
+We can achieve very high quality results at high resolution by combining multi-GPU processing with multiscale
+generation as described in the paper
+<a href="https://arxiv.org/abs/1611.07865">**Controlling Perceptual Factors in Neural Style Transfer**</a> by Leon A. Gatys, 
+Alexander S. Ecker, Matthias Bethge, Aaron Hertzmann and Eli Shechtman.
+
 ## Implementation details
 Images are initialized with white noise and optimized using L-BFGS.
 
