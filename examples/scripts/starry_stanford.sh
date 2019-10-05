@@ -68,7 +68,7 @@ $PYTHON neural_style.py \
   -tv_weight 0 \
   -gpu $GPU \
   -backend cudnn
-  
+
 $PYTHON neural_style.py \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
