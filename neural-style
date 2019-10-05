@@ -71,7 +71,7 @@ def main():
 
     content_image = preprocess(params.content_image, params.image_size).type(dtype)
     style_image_input = params.style_image.split(',')
-    style_image_list, ext = [], [".jpg",".png"]
+    style_image_list, ext = [], [".jpg", ".jpeg", ".png", ".tiff"]
     for image in style_image_input:
         if os.path.isdir(image):
             images = (image + "/" + file for file in os.listdir(image)
