@@ -9,11 +9,21 @@ CONTENT_IMAGE=examples/inputs/hoovertowernight.jpg
 STYLE_WEIGHT=5e2
 STYLE_SCALE=1.0
 
-PYTHON=python
+STYLE_WEIGHT2=2500 # Style weight for image size 2048 and above
+
+PYTHON=python3 # Change to Python if using Python 2
+SCRIPT=neural_style.py
 GPU=0
 
+NEURAL_STYLE=$PYTHON
+NEURAL_STYLE+=" "
+NEURAL_STYLE+=$SCRIPT
 
-$PYTHON neural_style.py \
+# Uncomment if using pip package
+#NEURAL_STYLE=neural-style
+
+
+$NEURAL_STYLE \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
   -style_scale $STYLE_SCALE \
@@ -25,7 +35,7 @@ $PYTHON neural_style.py \
   -gpu $GPU \
   -backend cudnn -cudnn_autotune
 
-$PYTHON neural_style.py \
+$NEURAL_STYLE \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
   -init image -init_image out1.png \
@@ -39,7 +49,7 @@ $PYTHON neural_style.py \
   -gpu $GPU \
   -backend cudnn -cudnn_autotune
 
-$PYTHON neural_style.py \
+$NEURAL_STYLE \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
   -init image -init_image out2.png \
@@ -53,15 +63,13 @@ $PYTHON neural_style.py \
   -gpu $GPU \
   -backend cudnn -cudnn_autotune
 
-STYLE_WEIGHT=2500
-
-$PYTHON neural_style.py \
+$NEURAL_STYLE \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
   -init image -init_image out3.png \
   -style_scale $STYLE_SCALE \
   -print_iter 1 \
-  -style_weight $STYLE_WEIGHT \
+  -style_weight $STYLE_WEIGHT2 \
   -image_size 2048 \
   -num_iterations 200 \
   -output_image out4.png \
@@ -69,13 +77,13 @@ $PYTHON neural_style.py \
   -gpu $GPU \
   -backend cudnn
 
-$PYTHON neural_style.py \
+$NEURAL_STYLE \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
   -init image -init_image out4.png \
   -style_scale $STYLE_SCALE \
   -print_iter 1 \
-  -style_weight $STYLE_WEIGHT \
+  -style_weight $STYLE_WEIGHT2 \
   -image_size 2350 \
   -num_iterations 200 \
   -output_image out5.png \
