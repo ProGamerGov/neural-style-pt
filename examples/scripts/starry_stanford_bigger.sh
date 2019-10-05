@@ -86,7 +86,7 @@ $NEURAL_STYLE \
   -gpu 0,1,2,3 \
   -multidevice_strategy 3,6,12 \
   -backend cudnn
-  
+
 $NEURAL_STYLE \
   -content_image $CONTENT_IMAGE \
   -style_image $STYLE_IMAGE \
