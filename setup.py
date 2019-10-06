@@ -1,7 +1,9 @@
 import setuptools
+from os import path
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'README.md'), encoding='utf-8') as fh:
+    long_description = fh.read()    
 
 setuptools.setup(
     name="neural-style",
