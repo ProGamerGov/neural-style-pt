@@ -10,9 +10,9 @@ onto a night-time photograph of the Stanford campus:
 
 <div align="center">
 
- <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/inputs/starry_night_google.jpg" height="223px">
- <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/inputs/hoovertowernight.jpg" height="223px">
- <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/outputs/starry_stanford_bigger.png" width="710px">
+<img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/inputs/starry_night_google.jpg" height="223px">
+<img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/inputs/hoovertowernight.jpg" height="223px">
+<img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/outputs/starry_stanford_big.png" width="710px">
 
 </div>
 
