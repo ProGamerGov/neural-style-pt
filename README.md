@@ -180,6 +180,7 @@ path or a full absolute path.
 * `-gpu`: Zero-indexed ID of the GPU to use; for CPU mode set `-gpu` to `c`.
 
 **Optimization options**:
+
 * `-content_weight`: How much to weight the content reconstruction term. Default is 5e0.
 * `-style_weight`: How much to weight the style reconstruction term. Default is 1e2.
 * `-tv_weight`: Weight of total-variation (TV) regularization; this helps to smooth the image.
@@ -196,17 +197,20 @@ path or a full absolute path.
 * `-learning_rate`: Learning rate to use with the ADAM optimizer. Default is 1e1.
 
 **Output options**:
+
 * `-output_image`: Name of the output image. Default is `out.png`.
 * `-print_iter`: Print progress every `print_iter` iterations. Set to 0 to disable printing.
 * `-save_iter`: Save the image every `save_iter` iterations. Set to 0 to disable saving intermediate results.
 
 **Layer options**:
+
 * `-content_layers`: Comma-separated list of layer names to use for content reconstruction.
   Default is `relu4_2`.
 * `-style_layers`: Comma-separated list of layer names to use for style reconstruction.
   Default is `relu1_1,relu2_1,relu3_1,relu4_1,relu5_1`.
 
 **Other options**:
+
 * `-style_scale`: Scale at which to extract features from the style image. Default is 1.0.
 * `-original_colors`: If you set this to 1, then the output image will keep the colors of the content image.
 * `-model_file`: Path to the `.pth` file for the VGG Caffe model. Default is the original VGG-19 model; you can also try the original VGG-16 model.
