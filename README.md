@@ -9,9 +9,11 @@ convolutional neural networks. Here's an example that maps the artistic style of
 onto a night-time photograph of the Stanford campus:
 
 <div align="center">
+
  <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/inputs/starry_night_google.jpg" height="223px">
  <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/inputs/hoovertowernight.jpg" height="223px">
  <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/outputs/starry_stanford_bigger.png" width="710px">
+
 </div>
 
 Applying the style of different images to the same content image gives interesting results.
@@ -19,6 +21,7 @@ Here we reproduce Figure 2 from the paper, which renders a photograph of the Tub
 variety of styles:
 
 <div align="center">
+
 <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/inputs/tubingen.jpg" height="250px">
 <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/outputs/tubingen_shipwreck.png" height="250px">
 
@@ -27,6 +30,7 @@ variety of styles:
 
 <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/outputs/tubingen_seated_nude.png" height="250px">
 <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/outputs/tubingen_composition_vii.png" height="250px">
+
 </div>
 
 Here are the results of applying the style of various pieces of artwork to this photograph of the
@@ -173,6 +177,7 @@ Note that paths to images should not contain the `~` character to represent your
 path or a full absolute path.
 
 **Options**:
+
 * `-image_size`: Maximum side length (in pixels) of the generated image. Default is 512.
 * `-style_blend_weights`: The weight for blending the style of multiple style images, as a
   comma-separated list, such as `-style_blend_weights 3,7`. By default all style images
@@ -241,8 +246,7 @@ If you are running on a GPU, you can also try running with `-backend cudnn` to r
 
 **Problem:** Get the following error message:
 
-`Missing key(s) in state_dict: "classifier.0.bias", "classifier.0.weight", "classifier.3.bias", "classifier.3.weight".
-        Unexpected key(s) in state_dict: "classifier.1.weight", "classifier.1.bias", "classifier.4.weight", "classifier.4.bias".`
+`Missing key(s) in state_dict: "classifier.0.bias", "classifier.0.weight", "classifier.3.bias", "classifier.3.weight". Unexpected key(s) in state_dict: "classifier.1.weight", "classifier.1.bias", "classifier.4.weight", "classifier.4.bias".`
 
 **Solution:** Due to a mix up with layer locations, older models require a fix to be compatible with newer versions of PyTorch. Donwloading the models with `neural-style -download_models` will automatically perform these fixes after downloading the models. You can find other compatible models [here](https://github.com/ProGamerGov/neural-style-pt/wiki/Other-Models).
 
@@ -311,11 +315,11 @@ If you find this code useful for your research, please cite:
 
 ```
 @misc{ProGamerGov2018,
-  author = {ProGamerGov},
-  title = {neural-style-pt},
-  year = {2018},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/ProGamerGov/neural-style-pt}},
+author = {ProGamerGov},
+title = {neural-style-pt},
+year = {2018},
+publisher = {GitHub},
+journal = {GitHub repository},
+howpublished = {\url{https://github.com/ProGamerGov/neural-style-pt}},
 }
 ```
