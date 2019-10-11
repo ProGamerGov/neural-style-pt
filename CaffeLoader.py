@@ -108,7 +108,7 @@ class ModelParallel(nn.Module):
         Splits a sequential network across multiple devices.
     
 	Args:
-            net (Module): model to be split across multiple devices
+            net (Module): a sequential model to be split across multiple devices
             device_ids (list) list of zero-indexed GPU int and str c for CPU
             net_splits (int or list of int): int or list of layer indices of where to split net
 	    
@@ -123,11 +123,12 @@ class ModelParallel(nn.Module):
         self.device_list = name_devices(device_ids.split(','))		
         self.chunks = chunks_to_devices(split_net(net, net_splits.split(',')), self.device_list)
 
+	
     def name_devices(input_list):
-	r"""Convert a list of zero-indexed GPU and CPU devices to their PyTorch names
+	r"""Convert a list of zero-indexed GPU and CPU devices to their PyTorch names.
 	
         Arguments:
-            input_list (list): List of zero-indexed GPU devices, and 'c' for CPU.
+            input_list (list): List of zero-indexed GPU devices, and 'c' for CPU
         """
 	
         device_list = []
@@ -138,8 +139,16 @@ class ModelParallel(nn.Module):
                 device_list.append("cpu")
         return device_list
 	
+	
     # Split a network into chunks
-    def split_net(net, net_splits):		
+    def split_net(net, net_splits):
+	r"""Split a sequential net in chunks.
+	
+        Arguments:
+            net (list): A list of Sequential nets.
+	    net_splits (int or list of int): Layer indices of where to split net 
+        """
+	
         chunks, cur_chunk = [], nn.Sequential()
         for i, l in enumerate(net):
             cur_chunk.add_module(str(i), net[i])
@@ -150,11 +159,12 @@ class ModelParallel(nn.Module):
         chunks.append(cur_chunk)
         return chunks
 	
+	
     def chunks_to_devices(chunks, device_list):
 	r"""Put a list of Sequential nets onto different devices.
 	
         Arguments:
-            chunks (list of networks): A list of Sequential nets.
+            chunks (list): A list of Sequential nets.
 	    device_list (list of string): A list of PyTorch device names 
         """
 	
@@ -162,8 +172,9 @@ class ModelParallel(nn.Module):
             chunk.to(device_list[i])
         return chunks
 
+
     def c(self, input, i):
-	r"""Convert a tensor to the input device's backend.
+	r"""Convert a tensor to a device from self.device_list's backend.
 	
         Arguments:
             input (Tensor): A float or CUDA tensor.
@@ -175,6 +186,7 @@ class ModelParallel(nn.Module):
         elif input.type() == 'torch.cuda.FloatTensor' and 'cpu' in self.device_list[i]:
             input = input.type('torch.FloatTensor')
         return input
+
 
     def forward(self, input):
         for i, chunk in enumerate(self.chunks):
