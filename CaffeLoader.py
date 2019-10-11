@@ -101,44 +101,75 @@ class NIN(nn.Module):
             nn.Softmax(),
         )
 
-        
-
-# Give a list of zero-indexed GPU and CPU devices their PyTorch name
-def name_devices(input_list):
-    device_list = []
-    for i, device in enumerate(input_list):
-        if str(device).lower() != 'c':
-            device_list.append("cuda:" + str(device))
-        else:
-            device_list.append("cpu")
-    return device_list
-	
-# Split a network into chunks
-def split_net(net, net_splits):		
-    chunks, cur_chunk = [], nn.Sequential()
-    for i, l in enumerate(net):
-         cur_chunk.add_module(str(i), net[i])
-         if str(i) in net_splits and net_splits != '':
-             del net_splits[0]
-             chunks.append(cur_chunk)
-             cur_chunk = nn.Sequential()
-    chunks.append(cur_chunk)
-    return chunks
-		
-# Put list of nets onto different devices
-def chunks_to_devices(chunks, device_list):
-    for i, chunk in enumerate(chunks):
-        chunk.to(device_list[i])
-    return chunks
-	
+			
     
 class ModelParallel(nn.Module):
-    def __init__(self, net, devices, device_splits):
+    r"""
+        Splits a sequential network across multiple devices.
+    
+	Args:
+            net (Module): model to be split across multiple devices
+            device_ids (list) list of zero-indexed GPU int and str c for CPU
+            net_splits (int or list of int): int or list of layer indices of where to split net
+	    
+	Example::
+
+        >>> net = ModelParallel(model, device_ids=[0, 1, 2], net_splits=[2,5])
+        >>> net = ModelParallel(model, device_ids=[c, 0], net_splits=[5]) # c is used for CPU ID
+    """
+	
+    def __init__(self, net, device_ids, net_splits):
         super(ModelParallel, self).__init__()
-        self.device_list = name_devices(devices.split(','))		
-        self.chunks = chunks_to_devices(split_net(net, device_splits.split(',')), self.device_list)
+        self.device_list = name_devices(device_ids.split(','))		
+        self.chunks = chunks_to_devices(split_net(net, net_splits.split(',')), self.device_list)
+
+    def name_devices(input_list):
+	r"""Convert a list of zero-indexed GPU and CPU devices to their PyTorch names
+	
+        Arguments:
+            input_list (list): List of zero-indexed GPU devices, and 'c' for CPU.
+        """
+	
+        device_list = []
+        for i, device in enumerate(input_list):
+            if str(device).lower() != 'c':
+                device_list.append("cuda:" + str(device))
+            else:
+                device_list.append("cpu")
+        return device_list
+	
+    # Split a network into chunks
+    def split_net(net, net_splits):		
+        chunks, cur_chunk = [], nn.Sequential()
+        for i, l in enumerate(net):
+            cur_chunk.add_module(str(i), net[i])
+            if str(i) in net_splits and net_splits != '':
+                del net_splits[0]
+                chunks.append(cur_chunk)
+                cur_chunk = nn.Sequential()
+        chunks.append(cur_chunk)
+        return chunks
+	
+    def chunks_to_devices(chunks, device_list):
+	r"""Put a list of Sequential nets onto different devices.
+	
+        Arguments:
+            chunks (list of networks): A list of Sequential nets.
+	    device_list (list of string): A list of PyTorch device names 
+        """
+	
+        for i, chunk in enumerate(chunks):
+            chunk.to(device_list[i])
+        return chunks
 
     def c(self, input, i):
+	r"""Convert a tensor to the input device's backend.
+	
+        Arguments:
+            input (Tensor): A float or CUDA tensor.
+	    i (int): An index value for self.device_list.  
+        """
+	
         if input.type() == 'torch.FloatTensor' and 'cuda' in self.device_list[i]:
             input = input.type('torch.cuda.FloatTensor')
         elif input.type() == 'torch.cuda.FloatTensor' and 'cpu' in self.device_list[i]:
