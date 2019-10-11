@@ -39,7 +39,7 @@ parser.add_argument("-original_colors", type=int, choices=[0, 1], default=0)
 parser.add_argument("-pooling", choices=['avg', 'max'], default='max')
 parser.add_argument("-model_file", type=str, default='models/vgg19-d01eb7cb.pth')
 parser.add_argument("-disable_check", action='store_true')
-parser.add_argument("-backend", choices=['nn', 'cudnn', 'mkl', 'mkl,cudnn', 'cudnn,mkl'], default='nn')
+parser.add_argument("-backend", choices=['nn', 'cudnn', 'mkl', 'mkldnn', 'openmp', 'mkl,cudnn', 'cudnn,mkl'], default='nn')
 parser.add_argument("-cudnn_autotune", action='store_true')
 parser.add_argument("-seed", type=int, default=-1)
 
@@ -289,6 +289,10 @@ def setup_gpu():
     def setup_cpu():
        if 'mkl' in params.backend:
            torch.backends.mkl.enabled = True
+       elif 'mkldnn' in params.backend:
+           print("MKLDNN is not supported yet.")
+       elif 'openmp' in params.backend:
+           torch.backends.openmp.enabled = True           
 
     multidevice = False
     if "," in str(params.gpu):
