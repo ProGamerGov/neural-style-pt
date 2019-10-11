@@ -136,6 +136,10 @@ Optional dependencies:
   * cuDNN v6 or above
 * For ROCm backend:
   * ROCm 2.1 or above
+* For MKL backend:
+  * MKL 2019 or above
+* For OpenMP backend:
+  * OpenMP 5.0 or above
 
 After installing the dependencies, you'll need to run the following script to download the VGG model:
 ```
