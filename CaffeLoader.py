@@ -125,7 +125,7 @@ def split_net(net, net_splits):
     chunks.append(cur_chunk)
     return chunks
 		
-# Put list of nets onto list of devices
+# Put list of nets onto different devices
 def chunks_to_devices(chunks, device_list):
     for i, chunk in enumerate(chunks):
         chunk.to(device_list[i])
