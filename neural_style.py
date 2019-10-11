@@ -6,7 +6,7 @@ import torch.optim as optim
 import torchvision.transforms as transforms
 
 from PIL import Image
-from CaffeLoader import loadCaffemodel
+from CaffeLoader import loadCaffemodel, ModelParallel
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -316,33 +316,10 @@ def setup_gpu():
 
 
 def setup_multi_device(net):
-    from CaffeLoader import ModelParallel
-    device_splits = params.multidevice_strategy.split(',')
-
-    assert len(params.gpu) - 1 == len(device_splits), \
+    assert len(params.gpu) - 1 == len(params.multidevice_strategy.split(',')), \
       "The number of -multidevice_strategy layer indices must be equal to the number of -gpu devices minus 1."
 
-    device_list = []
-    for i, device in enumerate(params.gpu):
-        if str(device).lower() != 'c':
-            device_list.append("cuda:" + str(device))
-        else:
-            device_list.append("cpu")
-
-    cur_chunk = nn.Sequential()
-    chunks = []
-    for i, l in enumerate(net):
-         cur_chunk.add_module(str(i), net[i])
-         if str(i) in device_splits and device_splits != '':
-             del device_splits[0]
-             chunks.append(cur_chunk)
-             cur_chunk = nn.Sequential()
-    chunks.append(cur_chunk)
-
-    for i, chunk in enumerate(chunks):
-        chunk.to(device_list[i])
-
-    new_net = ModelParallel(chunks, device_list)
+    new_net = ModelParallel(net, params.gpu, params.multidevice_strategy)
     return new_net
 
 
