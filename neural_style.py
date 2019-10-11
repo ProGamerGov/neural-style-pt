@@ -40,6 +40,7 @@ parser.add_argument("-pooling", choices=['avg', 'max'], default='max')
 parser.add_argument("-model_file", type=str, default='models/vgg19-d01eb7cb.pth')
 parser.add_argument("-disable_check", action='store_true')
 parser.add_argument("-backend", choices=['nn', 'cudnn', 'mkl', 'mkl,cudnn', 'cudnn,mkl'], default='nn')
+#parser.add_argument('-backend', choices=['nn', 'cudnn', 'mkl'], default='nn', nargs='*')
 parser.add_argument("-cudnn_autotune", action='store_true')
 parser.add_argument("-seed", type=int, default=-1)
 
