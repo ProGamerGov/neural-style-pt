@@ -226,6 +226,7 @@ def modelSelector(model_file, pooling):
         raise ValueError("Model architecture not recognized.")
     return cnn, layerList
 
+
 # Print like Torch7/loadcaffe
 def print_loadcaffe(cnn, layerList):
     c = 0
