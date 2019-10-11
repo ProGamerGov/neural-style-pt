@@ -238,6 +238,7 @@ def print_loadcaffe(cnn, layerList):
          if c == len(layerList['C']):
              break
 
+	
 # Load the model, and configure pooling layer type
 def loadCaffemodel(model_file, pooling, use_gpu, disable_check):
     cnn, layerList = modelSelector(str(model_file).lower(), pooling)
