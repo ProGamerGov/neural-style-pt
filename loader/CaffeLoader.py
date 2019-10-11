@@ -104,37 +104,39 @@ class NIN(nn.Module):
 
      
 
+def name_devices(input_list):
+    device_list = []
+    for i, device in enumerate(input_list):
+        if str(device).lower() != 'c':
+            device_list.append("cuda:" + str(device))
+        else:
+            device_list.append("cpu")
+    return device_list	
+	
+def split_net(net, net_splits):
+    chunks, cur_chunk = [], nn.Sequential()
+    for i, l in enumerate(net):
+        cur_chunk.add_module(str(i), net[i])
+        if str(i) in net_splits and net_splits != '':
+            del net_splits[0]
+            chunks.append(cur_chunk)
+            cur_chunk = nn.Sequential()
+    chunks.append(cur_chunk)
+    return chunks
+		
+def chunks_to_devices(chunks, device_list):
+    for i, chunk in enumerate(chunks):
+        chunk.to(device_list[i])
+    return chunks   
+
+
+
 class ModelParallel(nn.Module):
     def __init__(self, net, device_ids, net_splits):
         super(ModelParallel, self).__init__()
         self.device_list = name_devices(device_ids.split(','))		
         self.chunks = chunks_to_devices(split_net(net, net_splits.split(',')), self.device_list)
 	
-    def name_devices(input_list):
-        device_list = []
-        for i, device in enumerate(input_list):
-            if str(device).lower() != 'c':
-                device_list.append("cuda:" + str(device))
-            else:
-                device_list.append("cpu")
-        return device_list	
-	
-    def split_net(net, net_splits):
-        chunks, cur_chunk = [], nn.Sequential()
-        for i, l in enumerate(net):
-            cur_chunk.add_module(str(i), net[i])
-            if str(i) in net_splits and net_splits != '':
-                del net_splits[0]
-                chunks.append(cur_chunk)
-                cur_chunk = nn.Sequential()
-        chunks.append(cur_chunk)
-        return chunks
-		
-    def chunks_to_devices(chunks, device_list):
-        for i, chunk in enumerate(chunks):
-            chunk.to(device_list[i])
-        return chunks
-
     def c(self, input, i):
         if input.type() == 'torch.FloatTensor' and 'cuda' in self.device_list[i]:
             input = input.type('torch.cuda.FloatTensor')
