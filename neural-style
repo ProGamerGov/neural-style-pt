@@ -325,7 +325,7 @@ def setup_gpu():
 
 def setup_multi_device(net):
     assert len(params.gpu.split(',')) - 1 == len(params.multidevice_strategy.split(',')), \
-      "The number of -multidevice_strategy layer indices must be equal to the number of -gpu devices minus 1."
+      "The number of -multidevice_strategy layer indices minus 1, must be equal to the number of -gpu devices."
 
     new_net = ModelParallel(net, params.gpu, params.multidevice_strategy)
     return new_net
