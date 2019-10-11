@@ -105,10 +105,10 @@ class NIN(nn.Module):
      
 
 class ModelParallel(nn.Module):
-    def __init__(self, chunks, device_ids, net_splits):
+    def __init__(self, net, device_ids, net_splits):
         super(ModelParallel, self).__init__()
         self.device_list = name_devices(device_ids.split(','))		
-        self.chunks = chunks_to_devices(split_net(chunks, net_splits.split(',')), self.device_list)
+        self.chunks = chunks_to_devices(split_net(net, net_splits.split(',')), self.device_list)
 	
     def name_devices(input_list):
         device_list = []
