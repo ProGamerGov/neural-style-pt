@@ -39,7 +39,7 @@ parser.add_argument("-original_colors", type=int, choices=[0, 1], default=0)
 parser.add_argument("-pooling", choices=['avg', 'max'], default='max')
 parser.add_argument("-model_file", type=str, default='models/vgg19-d01eb7cb.pth')
 parser.add_argument("-disable_check", action='store_true')
-parser.add_argument("-backend", choices=['nn', 'cudnn', 'mkl'], default='nn')
+parser.add_argument("-backend", choices=['nn', 'cudnn', 'mkl', 'mkl,cudnn', 'cudnn,mkl'], default='nn')
 parser.add_argument("-cudnn_autotune", action='store_true')
 parser.add_argument("-seed", type=int, default=-1)
 
@@ -279,7 +279,7 @@ def setup_optimizer(img):
 
 def setup_gpu():
     def setup_cuda():
-        if params.backend == 'cudnn':
+        if 'cudnn' in params.backend:
             torch.backends.cudnn.enabled = True
             if params.cudnn_autotune:
                 torch.backends.cudnn.benchmark = True
@@ -287,31 +287,28 @@ def setup_gpu():
             torch.backends.cudnn.enabled = False
 
     def setup_cpu():
-       if params.backend =='mkl':
+       if 'mkl' in params.backend:
            torch.backends.mkl.enabled = True
 
     multidevice = False
     if "," in str(params.gpu):
-        params.gpu = params.gpu.split(',')
+        devices = params.gpu.split(',')
         multidevice = True
 
-        if 'c' in str(params.gpu[0]).lower():
+        if 'c' in str(devices[0]).lower():
             backward_device = "cpu"
-            setup_cuda()
-            setup_cpu()
+            setup_cuda(), setup_cpu()
         else:
-            backward_device = "cuda:" + params.gpu[0]
+            backward_device = "cuda:" + devices[0]
             setup_cuda()
         dtype = torch.FloatTensor
 
     elif "c" not in str(params.gpu).lower():
         setup_cuda()
-        dtype = torch.cuda.FloatTensor
-        backward_device = "cuda:" + str(params.gpu)
+        dtype, backward_device = torch.cuda.FloatTensor, "cuda:" + str(params.gpu)
     else:
        setup_cpu()
-       dtype = torch.FloatTensor
-       backward_device = "cpu"
+       dtype, backward_device = torch.FloatTensor, "cpu"
     return dtype, multidevice, backward_device
 
 
