@@ -292,7 +292,7 @@ def setup_gpu():
        elif 'mkldnn' in params.backend:
            raise ValueError("MKL-DNN is not supported yet.")
        elif 'openmp' in params.backend:
-           torch.backends.openmp.enabled = True           
+           torch.backends.openmp.enabled = True
 
     multidevice = False
     if "," in str(params.gpu):
