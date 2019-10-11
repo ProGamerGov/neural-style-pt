@@ -290,7 +290,7 @@ def setup_gpu():
        if 'mkl' in params.backend:
            torch.backends.mkl.enabled = True
        elif 'mkldnn' in params.backend:
-           print("MKL-DNN is not supported yet.")
+           raise ValueError("MKL-DNN is not supported yet.")
        elif 'openmp' in params.backend:
            torch.backends.openmp.enabled = True           
 
