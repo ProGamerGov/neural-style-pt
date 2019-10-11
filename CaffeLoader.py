@@ -103,7 +103,7 @@ class NIN(nn.Module):
 
         
 
-# Give zero-indexed GPU and CPU devices their Torch name
+# Give a list of zero-indexed GPU and CPU devices their PyTorch name
 def name_devices(input_list):
     device_list = []
     for i, device in enumerate(input_list):
@@ -113,19 +113,19 @@ def name_devices(input_list):
             device_list.append("cpu")
     return device_list
 	
-# Split network into chunks
-def split_net(net, device_splits):		
+# Split a network into chunks
+def split_net(net, net_splits):		
     chunks, cur_chunk = [], nn.Sequential()
     for i, l in enumerate(net):
          cur_chunk.add_module(str(i), net[i])
-         if str(i) in device_splits and device_splits != '':
+         if str(i) in net_splits and net_splits != '':
              del device_splits[0]
              chunks.append(cur_chunk)
              cur_chunk = nn.Sequential()
     chunks.append(cur_chunk)
     return chunks
 		
-# Put net chunks onto devices
+# Put list of nets onto list of devices
 def chunks_to_devices(chunks, device_list):
     for i, chunk in enumerate(chunks):
         chunk.to(device_list[i])
