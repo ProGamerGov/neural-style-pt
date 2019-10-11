@@ -122,7 +122,8 @@ def split_net(net, device_splits):
              del device_splits[0]
              chunks.append(cur_chunk)
              cur_chunk = nn.Sequential()
-    return chunks.append(cur_chunk)
+    chunks.append(cur_chunk)
+    return chunks
 		
 # Put net chunks onto devices
 def chunks_to_devices(chunks, device_list):
