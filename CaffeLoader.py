@@ -119,7 +119,7 @@ def split_net(net, net_splits):
     for i, l in enumerate(net):
          cur_chunk.add_module(str(i), net[i])
          if str(i) in net_splits and net_splits != '':
-             del device_splits[0]
+             del net_splits[0]
              chunks.append(cur_chunk)
              cur_chunk = nn.Sequential()
     chunks.append(cur_chunk)
