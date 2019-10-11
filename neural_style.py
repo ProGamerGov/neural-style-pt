@@ -197,7 +197,7 @@ def main():
             img = init_image.clone()
         else:
             img = content_image.clone()
-    img = nn.Parameter(img.type(dtype))
+    img = nn.Parameter(img)
 
     def maybe_print(t, loss):
         if params.print_iter > 0 and t % params.print_iter == 0:
