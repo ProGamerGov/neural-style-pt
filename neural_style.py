@@ -308,13 +308,13 @@ def setup_gpu():
         setup_cuda()
         dtype, backward_device = torch.cuda.FloatTensor, "cuda:" + str(params.gpu)
     else:
-       setup_cpu()
-       dtype, backward_device = torch.FloatTensor, "cpu"
+        setup_cpu()
+        dtype, backward_device = torch.FloatTensor, "cpu"
     return dtype, multidevice, backward_device
 
 
 def setup_multi_device(net):
-    assert len(params.gpu) - 1 == len(params.multidevice_strategy.split(',')), \
+    assert len(params.gpu.split(',')) - 1 == len(params.multidevice_strategy.split(',')), \
       "The number of -multidevice_strategy layer indices must be equal to the number of -gpu devices minus 1."
 
     new_net = ModelParallel(net, params.gpu, params.multidevice_strategy)
