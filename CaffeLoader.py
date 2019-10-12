@@ -102,11 +102,37 @@ class NIN(nn.Module):
         )
 
 
+
 class ModelParallel(nn.Module):
-    def __init__(self, chunks, device_list):
+    def __init__(self, net, device_ids, net_splits):
         super(ModelParallel, self).__init__()
-        self.chunks = chunks
-        self.device_list = device_list
+        self.device_list = self.name_devices(device_ids.split(','))
+        self.chunks = self.chunks_to_devices(self.split_net(net, net_splits.split(',')))
+
+    def name_devices(self, input_list):
+        device_list = []
+        for i, device in enumerate(input_list):
+            if str(device).lower() != 'c':
+                device_list.append("cuda:" + str(device))
+            else:
+                device_list.append("cpu")
+        return device_list
+
+    def split_net(self, net, net_splits):
+        chunks, cur_chunk = [], nn.Sequential()
+        for i, l in enumerate(net):
+            cur_chunk.add_module(str(i), net[i])
+            if str(i) in net_splits and net_splits != '':
+                del net_splits[0]
+                chunks.append(cur_chunk)
+                cur_chunk = nn.Sequential()
+        chunks.append(cur_chunk)
+        return chunks
+
+    def chunks_to_devices(self, chunks):
+        for i, chunk in enumerate(chunks):
+            chunk.to(self.device_list[i])
+        return chunks
 
     def c(self, input, i):
         if input.type() == 'torch.FloatTensor' and 'cuda' in self.device_list[i]:
@@ -198,6 +224,7 @@ def modelSelector(model_file, pooling):
         raise ValueError("Model architecture not recognized.")
     return cnn, layerList
 
+
 # Print like Torch7/loadcaffe
 def print_loadcaffe(cnn, layerList):
     c = 0
@@ -208,6 +235,7 @@ def print_loadcaffe(cnn, layerList):
              c+=1
          if c == len(layerList['C']):
              break
+
 
 # Load the model, and configure pooling layer type
 def loadCaffemodel(model_file, pooling, use_gpu, disable_check):

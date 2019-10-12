@@ -136,6 +136,10 @@ Optional dependencies:
   * cuDNN v6 or above
 * For ROCm backend:
   * ROCm 2.1 or above
+* For MKL backend:
+  * MKL 2019 or above
+* For OpenMP backend:
+  * OpenMP 5.0 or above
 
 After installing the dependencies, you'll need to run the following script to download the VGG model:
 ```
@@ -146,7 +150,7 @@ The original [VGG-16 model](https://gist.github.com/ksimonyan/211839e770f7b538e2
 
 If you have a smaller memory GPU then using NIN Imagenet model will be better and gives slightly worse yet comparable results. You can get the details on the model from [BVLC Caffe ModelZoo](https://github.com/BVLC/caffe/wiki/Model-Zoo). The NIN model is downloaded when you run the `download_models.py` script.
 
-You can find detailed installation instructions for Ubuntu in the [installation guide](INSTALL.md).
+You can find detailed installation instructions for Ubuntu and Windows in the [installation guide](INSTALL.md).
 
 ## Usage
 Basic usage:
@@ -213,8 +217,7 @@ path or a full absolute path.
   the option is here.
 * `-seed`: An integer value that you can specify for repeatable results. By default this value is random for each run.
 * `-multidevice_strategy`: A comma-separated list of layer indices at which to split the network when using multiple devices. See [Multi-GPU scaling](https://github.com/ProGamerGov/neural-style-pt#multi-gpu-scaling) for more details.
-* `-backend`: `nn`, `cudnn`, or `mkl`. Default is `nn`.
-  `mkl` requires Intel's MKL backend.
+* `-backend`: `nn`, `cudnn`, `openmp`, or `mkl`. Default is `nn`. `mkl` requires Intel's MKL backend.
 * `-cudnn_autotune`: When using the cuDNN backend, pass this flag to use the built-in cuDNN autotuner to select
   the best convolution algorithms for your architecture. This will make the first iteration a bit slower and can
   take a bit more memory, but may significantly speed up the cuDNN backend.
