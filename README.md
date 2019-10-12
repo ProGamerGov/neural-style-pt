@@ -12,7 +12,7 @@ onto a night-time photograph of the Stanford campus:
 
 <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/inputs/starry_night_google.jpg" height="223px">
 <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/inputs/hoovertowernight.jpg" height="223px">
-<img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/outputs/starry_stanford_big.png" width="710px">
+<img src="https://user-images.githubusercontent.com/10626398/66707704-310a8000-ed02-11e9-92f9-e2f74ef74270.jpg" width="710px">
 
 </div>
 
