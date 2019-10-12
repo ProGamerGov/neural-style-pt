@@ -13,7 +13,7 @@ The pip and Conda packages ship with CUDA and cuDNN already built in, so after y
 
 ### pip:
 
-If you wish to install neural-style-pt as a pip package, then use the following command:
+As per the neural-style-pt PyPI page: https://pypi.org/project/neural-style/, you can install neural-style-pt as a pip package with the following command:
 
 ```
 # in a terminal, run the command
