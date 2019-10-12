@@ -150,7 +150,7 @@ The original [VGG-16 model](https://gist.github.com/ksimonyan/211839e770f7b538e2
 
 If you have a smaller memory GPU then using NIN Imagenet model will be better and gives slightly worse yet comparable results. You can get the details on the model from [BVLC Caffe ModelZoo](https://github.com/BVLC/caffe/wiki/Model-Zoo). The NIN model is downloaded when you run the `download_models.py` script.
 
-You can find detailed installation instructions for Ubuntu in the [installation guide](INSTALL.md).
+You can find detailed installation instructions for Ubuntu and Windows in the [installation guide](INSTALL.md).
 
 ## Usage
 Basic usage:
