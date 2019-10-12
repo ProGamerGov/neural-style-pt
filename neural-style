@@ -7,7 +7,7 @@ import torch.optim as optim
 import torchvision.transforms as transforms
 
 from PIL import Image
-from loader.CaffeLoader import loadCaffemodel
+from loader.CaffeLoader import loadCaffemodel, ModelParallel
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -40,7 +40,7 @@ parser.add_argument("-original_colors", type=int, choices=[0, 1], default=0)
 parser.add_argument("-pooling", choices=['avg', 'max'], default='max')
 parser.add_argument("-model_file", help="Ex: path/to/model | 'vgg19-d01eb7cb.pth', 'vgg16-00b39a1b.pth', 'nin_imagenet.pth'", type=str, default='')
 parser.add_argument("-disable_check", action='store_true')
-parser.add_argument("-backend", choices=['nn', 'cudnn', 'mkl'], default='nn')
+parser.add_argument("-backend", choices=['nn', 'cudnn', 'mkl', 'openmp', 'mkldnn', 'mkl,cudnn', 'cudnn,mkl'], default='nn')
 parser.add_argument("-cudnn_autotune", action='store_true')
 parser.add_argument("-seed", type=int, default=-1)
 
@@ -208,7 +208,7 @@ def main():
             img = init_image.clone()
         else:
             img = content_image.clone()
-    img = nn.Parameter(img.type(dtype))
+    img = nn.Parameter(img)
 
     def maybe_print(t, loss):
         if params.print_iter > 0 and t % params.print_iter == 0:
@@ -290,7 +290,7 @@ def setup_optimizer(img):
 
 def setup_gpu():
     def setup_cuda():
-        if params.backend == 'cudnn':
+        if 'cudnn' in params.backend:
             torch.backends.cudnn.enabled = True
             if params.cudnn_autotune:
                 torch.backends.cudnn.benchmark = True
@@ -298,62 +298,40 @@ def setup_gpu():
             torch.backends.cudnn.enabled = False
 
     def setup_cpu():
-       if params.backend =='mkl':
-           torch.backends.mkl.enabled = True
+        if 'mkl' in params.backend and 'mkldnn' not in params.backend:
+            torch.backends.mkl.enabled = True
+        elif 'mkldnn' in params.backend:
+            raise ValueError("MKL-DNN is not supported yet.")
+        elif 'openmp' in params.backend:
+            torch.backends.openmp.enabled = True
 
     multidevice = False
     if "," in str(params.gpu):
-        params.gpu = params.gpu.split(',')
+        devices = params.gpu.split(',')
         multidevice = True
 
-        if 'c' in str(params.gpu[0]).lower():
+        if 'c' in str(devices[0]).lower():
             backward_device = "cpu"
-            setup_cuda()
-            setup_cpu()
+            setup_cuda(), setup_cpu()
         else:
-            backward_device = "cuda:" + params.gpu[0]
+            backward_device = "cuda:" + devices[0]
             setup_cuda()
         dtype = torch.FloatTensor
 
     elif "c" not in str(params.gpu).lower():
         setup_cuda()
-        dtype = torch.cuda.FloatTensor
-        backward_device = "cuda:" + str(params.gpu)
+        dtype, backward_device = torch.cuda.FloatTensor, "cuda:" + str(params.gpu)
     else:
-       setup_cpu()
-       dtype = torch.FloatTensor
-       backward_device = "cpu"
+        setup_cpu()
+        dtype, backward_device = torch.FloatTensor, "cpu"
     return dtype, multidevice, backward_device
 
 
 def setup_multi_device(net):
-    from loader.CaffeLoader import ModelParallel
-    device_splits = params.multidevice_strategy.split(',')
+    assert len(params.gpu.split(',')) - 1 == len(params.multidevice_strategy.split(',')), \
+      "The number of -multidevice_strategy layer indices minus 1, must be equal to the number of -gpu devices."
 
-    assert len(params.gpu) - 1 == len(device_splits), \
-      "The number of -multidevice_strategy layer indices must be equal to the number of -gpu devices minus 1."
-
-    device_list = []
-    for i, device in enumerate(params.gpu):
-        if str(device).lower() != 'c':
-            device_list.append("cuda:" + str(device))
-        else:
-            device_list.append("cpu")
-
-    cur_chunk = nn.Sequential()
-    chunks = []
-    for i, l in enumerate(net):
-         cur_chunk.add_module(str(i), net[i])
-         if str(i) in device_splits and device_splits != '':
-             del device_splits[0]
-             chunks.append(cur_chunk)
-             cur_chunk = nn.Sequential()
-    chunks.append(cur_chunk)
-
-    for i, chunk in enumerate(chunks):
-        chunk.to(device_list[i])
-
-    new_net = ModelParallel(chunks, device_list)
+    new_net = ModelParallel(net, params.gpu, params.multidevice_strategy)
     return new_net
 
 
