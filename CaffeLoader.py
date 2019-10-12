@@ -245,7 +245,7 @@ def loadCaffemodel(model_file, pooling, use_gpu, disable_check):
     print("Successfully loaded " + str(model_file))
 
     # Maybe convert the model to cuda now, to avoid later issues
-    if "c" not in str(use_gpu).lower() or 'c' not in str(use_gpu[0]).lower():
+    if "c" not in str(use_gpu).lower() or "c" not in str(use_gpu[0]).lower():
         cnn = cnn.cuda()
     cnn = cnn.features
 
