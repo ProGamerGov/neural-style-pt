@@ -107,7 +107,7 @@ class ModelParallel(nn.Module):
     def __init__(self, net, device_ids, net_splits):
         super(ModelParallel, self).__init__()
         self.device_list = self.name_devices(device_ids.split(','))
-        self.chunks = self.chunks_to_devices(self.split_net(net, net_splits.split(',')), self.device_list)
+        self.chunks = self.chunks_to_devices(self.split_net(net, net_splits.split(',')))
 
     def name_devices(self, input_list):
         device_list = []
@@ -129,9 +129,9 @@ class ModelParallel(nn.Module):
         chunks.append(cur_chunk)
         return chunks
 
-    def chunks_to_devices(self, chunks, device_list):
+    def chunks_to_devices(self, chunks):
         for i, chunk in enumerate(chunks):
-            chunk.to(device_list[i])
+            chunk.to(self.device_list[i])
         return chunks
 
     def c(self, input, i):
