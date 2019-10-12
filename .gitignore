@@ -7,3 +7,4 @@ out*.png
 neural_style.egg-info/
 build/
 dist/
+.git/
