@@ -104,10 +104,10 @@ class NIN(nn.Module):
 
 
 class ModelParallel(nn.Module):
-    def __init__(self, net, device_ids, net_splits):
+    def __init__(self, net, device_ids, device_splits):
         super(ModelParallel, self).__init__()
         self.device_list = self.name_devices(device_ids.split(','))
-        self.chunks = self.chunks_to_devices(self.split_net(net, net_splits.split(',')))
+        self.chunks = self.chunks_to_devices(self.split_net(net, device_splits.split(',')))
 
     def name_devices(self, input_list):
         device_list = []
@@ -118,12 +118,12 @@ class ModelParallel(nn.Module):
                 device_list.append("cpu")
         return device_list
 
-    def split_net(self, net, net_splits):
+    def split_net(self, net, device_splits):
         chunks, cur_chunk = [], nn.Sequential()
         for i, l in enumerate(net):
             cur_chunk.add_module(str(i), net[i])
-            if str(i) in net_splits and net_splits != '':
-                del net_splits[0]
+            if str(i) in device_splits and device_splits != '':
+                del device_splits[0]
                 chunks.append(cur_chunk)
                 cur_chunk = nn.Sequential()
         chunks.append(cur_chunk)
@@ -195,8 +195,8 @@ vgg19_dict = {
 
 
 def modelSelector(model_file, pooling):
-    vgg_list = ["fcn32s","pruning", "sod", "vgg"]
-    if any(ext in model_file for ext in vgg_list):
+    vgg_list = ["fcn32s", "pruning", "sod", "vgg"]
+    if any(name in model_file for name in vgg_list):
         if "pruning" in model_file:
             print("VGG-16 Architecture Detected")
             print("Using The Channel Pruning Model")
@@ -245,7 +245,7 @@ def loadCaffemodel(model_file, pooling, use_gpu, disable_check):
     print("Successfully loaded " + str(model_file))
 
     # Maybe convert the model to cuda now, to avoid later issues
-    if "c" not in str(use_gpu) or 'c' not in str(use_gpu[0]).lower():
+    if "c" not in str(use_gpu).lower() or "c" not in str(use_gpu[0]).lower():
         cnn = cnn.cuda()
     cnn = cnn.features
 

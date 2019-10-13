@@ -13,6 +13,8 @@ The pip and Conda packages ship with CUDA and cuDNN already built in, so after y
 
 ### pip:
 
+The neural-style-pt PyPI page can be found here: https://pypi.org/project/neural-style/
+
 If you wish to install neural-style-pt as a pip package, then use the following command:
 
 ```
@@ -195,7 +197,7 @@ Then using https://pytorch.org/, get the correct pip command, paste it into the 
 
 
 ```
-pip3 install torch===1.2.0 torchvision===0.4.0 -f https://download.pytorch.org/whl/torch_stable.html
+pip3 install torch===1.3.0 torchvision===0.4.1 -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
 
