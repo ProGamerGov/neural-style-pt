@@ -197,7 +197,7 @@ Then using https://pytorch.org/, get the correct pip command, paste it into the 
 
 
 ```
-pip3 install torch===1.2.0 torchvision===0.4.0 -f https://download.pytorch.org/whl/torch_stable.html
+pip3 install torch===1.3.0 torchvision===0.4.1 -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
 
