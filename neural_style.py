@@ -323,7 +323,7 @@ def setup_multi_device(net):
     new_net = ModelParallel(net, params.gpu, params.multidevice_strategy)
     return new_net
 
-
+ 
 # Preprocess an image before passing it to a model.
 # We need to rescale from [0, 1] to [0, 255], convert from RGB to BGR,
 # and subtract the mean pixel.
@@ -334,7 +334,10 @@ def preprocess(image_name, image_size):
     Loader = transforms.Compose([transforms.Resize(image_size), transforms.ToTensor()])
     rgb2bgr = transforms.Compose([transforms.Lambda(lambda x: x[torch.LongTensor([2,1,0])])])
     Normalize = transforms.Compose([transforms.Normalize(mean=[103.939, 116.779, 123.68], std=[1,1,1])])
-    tensor = Normalize(rgb2bgr(Loader(image) * 256)).unsqueeze(0)
+    if 'stylized-imagenet' in params.model_file:
+        tensor = Normalize(rgb2bgr(Loader(image) * 256)).unsqueeze(0)
+    else:
+        tensor = Normalize(rgb2bgr(Loader(image) * 256)).unsqueeze(0)
     return tensor
 
 
@@ -342,7 +345,10 @@ def preprocess(image_name, image_size):
 def deprocess(output_tensor):
     Normalize = transforms.Compose([transforms.Normalize(mean=[-103.939, -116.779, -123.68], std=[1,1,1])])
     bgr2rgb = transforms.Compose([transforms.Lambda(lambda x: x[torch.LongTensor([2,1,0])])])
-    output_tensor = bgr2rgb(Normalize(output_tensor.squeeze(0).cpu())) / 256
+    if 'stylized-imagenet' in params.model_file:
+        output_tensor = Normalize(output_tensor.squeeze(0).cpu()) / 256
+    else:
+        output_tensor = bgr2rgb(Normalize(output_tensor.squeeze(0).cpu())) / 256
     output_tensor.clamp_(0, 1)
     Image2PIL = transforms.ToPILImage()
     image = Image2PIL(output_tensor.cpu())
