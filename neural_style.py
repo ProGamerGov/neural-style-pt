@@ -335,6 +335,9 @@ def preprocess(image_name, image_size):
     Loader = transforms.Compose([transforms.Resize(image_size), transforms.ToTensor()])
     rgb2bgr = transforms.Compose([transforms.Lambda(lambda x: x[torch.LongTensor([2,1,0])])])
     NormalizeCaffe = transforms.Compose([transforms.Normalize(mean=[103.939, 116.779, 123.68], std=[1,1,1])])
+    NormalizePyTorch = transforms.Compose([transforms.Normalize(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375])])
+    #NormalizePyTorch = transforms.Compose([transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
     NormalizePyTorch = transforms.Compose([transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
     if 'stylized-imagenet' in params.model_file:
         tensor = NormalizePyTorch(Loader(image)).unsqueeze(0)
@@ -346,7 +349,12 @@ def preprocess(image_name, image_size):
 #  Undo the above preprocessing.
 def deprocess(output_tensor):
     NormalizeCaffe = transforms.Compose([transforms.Normalize(mean=[-103.939, -116.779, -123.68], std=[1,1,1])])
-    NormalizePyTorch = transforms.Compose([transforms.Normalize(mean=[-0.406, -0.456, -0.485], std=[-0.225, -0.224, -0.229])])
+    #NormalizePyTorch = transforms.Compose([transforms.Normalize(mean=[-0.406, -0.456, -0.485], std=[-0.225, -0.224, -0.229])])
+    #NormalizePyTorch = transforms.Compose([transforms.Normalize(mean=[-103.53, -116.28, -123.675], std=[-57.375, -57.12, -58.395])])
+    #NormalizePyTorch = transforms.Compose([transforms.Normalize(mean=[-123.675, -116.28, -103.53], std=[-58.395, -57.12, -57.375])])
+
+    NormalizePyTorch = transforms.Compose([transforms.Normalize(mean=[-0.485, -0.456, -0.406], std=[-0.229, -0.224, -0.225])])
+
     bgr2rgb = transforms.Compose([transforms.Lambda(lambda x: x[torch.LongTensor([2,1,0])])])
     if 'stylized-imagenet' in params.model_file:
         output_tensor = NormalizePyTorch(output_tensor.squeeze(0).cpu())
