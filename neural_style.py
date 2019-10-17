@@ -234,6 +234,7 @@ def main():
     def feval():
         num_calls[0] += 1
         optimizer.zero_grad()
+
         net(img)
         loss = 0
 
@@ -333,22 +334,24 @@ def preprocess(image_name, image_size):
         image_size = tuple([int((float(image_size) / max(image.size))*x) for x in (image.height, image.width)])
     Loader = transforms.Compose([transforms.Resize(image_size), transforms.ToTensor()])
     rgb2bgr = transforms.Compose([transforms.Lambda(lambda x: x[torch.LongTensor([2,1,0])])])
-    Normalize = transforms.Compose([transforms.Normalize(mean=[103.939, 116.779, 123.68], std=[1,1,1])])
+    NormalizeCaffe = transforms.Compose([transforms.Normalize(mean=[103.939, 116.779, 123.68], std=[1,1,1])])
+    NormalizePyTorch = transforms.Compose([transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
     if 'stylized-imagenet' in params.model_file:
-        tensor = Normalize(rgb2bgr(Loader(image) * 256)).unsqueeze(0)
+        tensor = NormalizePyTorch(Loader(image)).unsqueeze(0)
     else:
-        tensor = Normalize(rgb2bgr(Loader(image) * 256)).unsqueeze(0)
+        tensor = NormalizeCaffe(rgb2bgr(Loader(image) * 256)).unsqueeze(0)
     return tensor
 
 
 #  Undo the above preprocessing.
 def deprocess(output_tensor):
-    Normalize = transforms.Compose([transforms.Normalize(mean=[-103.939, -116.779, -123.68], std=[1,1,1])])
+    NormalizeCaffe = transforms.Compose([transforms.Normalize(mean=[-103.939, -116.779, -123.68], std=[1,1,1])])
+    NormalizePyTorch = transforms.Compose([transforms.Normalize(mean=[-0.406, -0.456, -0.485], std=[-0.225, -0.224, -0.229])])
     bgr2rgb = transforms.Compose([transforms.Lambda(lambda x: x[torch.LongTensor([2,1,0])])])
     if 'stylized-imagenet' in params.model_file:
-        output_tensor = Normalize(output_tensor.squeeze(0).cpu()) / 256
+        output_tensor = NormalizePyTorch(output_tensor.squeeze(0).cpu())
     else:
-        output_tensor = bgr2rgb(Normalize(output_tensor.squeeze(0).cpu())) / 256
+        output_tensor = bgr2rgb(NormalizeCaffe(output_tensor.squeeze(0).cpu())) / 256
     output_tensor.clamp_(0, 1)
     Image2PIL = transforms.ToPILImage()
     image = Image2PIL(output_tensor.cpu())
