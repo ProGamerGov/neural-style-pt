@@ -339,15 +339,13 @@ def preprocess(image_name, image_size):
     if type(image_size) is not tuple:
         image_size = tuple([int((float(image_size) / max(image.size))*x) for x in (image.height, image.width)])
     Loader = transforms.Compose([transforms.Resize(image_size), transforms.ToTensor()])
-    rgb2bgr = transforms.Compose([transforms.Lambda(lambda x: x[torch.LongTensor([2,1,0])])])
-    
+    rgb2bgr = transforms.Compose([transforms.Lambda(lambda x: x[torch.LongTensor([2,1,0])])])    
     NormalizeCaffe = transforms.Compose([transforms.Normalize(mean=[103.939, 116.779, 123.68], std=[1,1,1])])
-    NormalizePyTorch = transforms.Compose([transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-    
-    if 'stylized-imagenet' in params.model_file:
-        tensor = NormalizePyTorch(Loader(image)).unsqueeze(0)
-    else:
+    NormalizePyTorch = transforms.Compose([transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])    
+    if params.model_type == 'caffe':
         tensor = NormalizeCaffe(rgb2bgr(Loader(image) * 256)).unsqueeze(0)
+    else:
+        tensor = NormalizePyTorch(Loader(image)).unsqueeze(0)
     return tensor
 
 
@@ -355,12 +353,11 @@ def preprocess(image_name, image_size):
 def deprocess(output_tensor):
     NormalizeCaffe = transforms.Compose([transforms.Normalize(mean=[-103.939, -116.779, -123.68], std=[1,1,1])])
     NormalizePyTorch = transforms.Compose([transforms.Normalize(mean=[-0.485, -0.456, -0.406], std=[-0.229, -0.224, -0.225])])
-    bgr2rgb = transforms.Compose([transforms.Lambda(lambda x: x[torch.LongTensor([2,1,0])])])
-   
-    if 'stylized-imagenet' in params.model_file:
-        output_tensor = NormalizePyTorch(output_tensor.squeeze(0).cpu())
-    else:
+    bgr2rgb = transforms.Compose([transforms.Lambda(lambda x: x[torch.LongTensor([2,1,0])])])   
+    if params.model_type == 'caffe':
         output_tensor = bgr2rgb(NormalizeCaffe(output_tensor.squeeze(0).cpu())) / 256
+    else:
+        output_tensor = NormalizePyTorch(output_tensor.squeeze(0).cpu())
     output_tensor.clamp_(0, 1)
     Image2PIL = transforms.ToPILImage()
     image = Image2PIL(output_tensor.cpu())
