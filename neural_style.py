@@ -404,9 +404,9 @@ def print_torch(net, multidevice):
 # Divide weights by channel size
 def NormalizeWeights(content_losses, style_losses):
     for n, i in enumerate(content_losses): 		
-        i.strength = i.strength / max(i.target.size())
+        i.strength = i.strength**2 / max(i.target.size())
     for n, i in enumerate(style_losses): 		
-        i.strength = i.strength / max(i.target.size())
+        i.strength = i.strength**2 / max(i.target.size())
        
 
     
