@@ -20,6 +20,7 @@ parser.add_argument("-gpu", help="Zero-indexed ID of the GPU to use; for CPU mod
 # Optimization options
 parser.add_argument("-content_weight", type=float, default=5e0)
 parser.add_argument("-style_weight", type=float, default=1e2)
+parser.add_argument("-normalize_weights", action='store_true')
 parser.add_argument("-tv_weight", type=float, default=1e-3)
 parser.add_argument("-num_iterations", type=int, default=1000)
 parser.add_argument("-init", choices=['random', 'image'], default='random')
@@ -172,6 +173,10 @@ def main():
             j.mode = 'capture'
             j.blend_weight = style_blend_weights[i]
         net(style_images_caffe[i])
+    
+    # Maybe normalize weights
+    if params.normalize_weights:
+        NormalizeWeights(content_losses, style_losses)
 
     # Set all loss modules to loss mode
     for i in content_losses:
@@ -396,8 +401,17 @@ def print_torch(net, multidevice):
          else:
              print(n())
     print(")")
+    
+    
+# Divide weights by channel size
+def NormalizeWeights(content_losses, style_losses):
+    for n, i in enumerate(content_losses): 		
+        i.strength = i.strength / max(i.target.size())
+    for n, i in enumerate(style_losses): 		
+        i.strength = i.strength / max(i.target.size())
+       
 
-
+    
 # Define an nn Module to compute content loss
 class ContentLoss(nn.Module):
 
