@@ -399,7 +399,6 @@ def NormalizeWeights(content_losses, style_losses):
     for n, i in enumerate(style_losses): 		
         i.strength = i.strength**2 / max(i.target.size())
        
-
     
 # Define an nn Module to compute content loss
 class ContentLoss(nn.Module):
