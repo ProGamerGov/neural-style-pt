@@ -61,7 +61,7 @@ def main():
 
     content_image = preprocess(params.content_image, params.image_size).type(dtype)
     style_image_input = params.style_image.split(',')
-    style_image_list, ext = [], [".jpg",".jpeg",".png",".tiff"]
+    style_image_list, ext = [], [".jpg", ".jpeg", ".png", ".tiff"]
     for image in style_image_input:
         if os.path.isdir(image):
             images = (image + "/" + file for file in os.listdir(image)
@@ -394,9 +394,9 @@ def print_torch(net, multidevice):
 # Divide weights by channel size
 def NormalizeWeights(content_losses, style_losses):
     for n, i in enumerate(content_losses):
-        i.strength = i.strength**2 / max(i.target.size())
+        i.strength = i.strength / max(i.target.size())
     for n, i in enumerate(style_losses):
-        i.strength = i.strength**2 / max(i.target.size())
+        i.strength = i.strength / max(i.target.size())
 
 
 # Define an nn Module to compute content loss
