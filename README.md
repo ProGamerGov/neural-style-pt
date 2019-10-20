@@ -215,7 +215,7 @@ path or a full absolute path.
   The VGG-19 models uses max pooling layers, but the paper mentions that replacing these layers with average
   pooling layers can improve the results. I haven't been able to get good results using average pooling, but
   the option is here.
-* `-normalize_weights`: If this flag is present, style and content weights will be divided by the the number of channels for each layer.
+* `-normalize_weights`: If this flag is present, content and style weights will be divided by the the number of channels for each layer.
 * `-seed`: An integer value that you can specify for repeatable results. By default this value is random for each run.
 * `-multidevice_strategy`: A comma-separated list of layer indices at which to split the network when using multiple devices. See [Multi-GPU scaling](https://github.com/ProGamerGov/neural-style-pt#multi-gpu-scaling) for more details.
 * `-backend`: `nn`, `cudnn`, `openmp`, or `mkl`. Default is `nn`. `mkl` requires Intel's MKL backend.
