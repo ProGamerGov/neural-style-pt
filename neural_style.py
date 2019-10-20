@@ -173,16 +173,16 @@ def main():
             j.mode = 'capture'
             j.blend_weight = style_blend_weights[i]
         net(style_images_caffe[i])
-    
-    # Maybe normalize weights
-    if params.normalize_weights:
-        NormalizeWeights(content_losses, style_losses)
 
     # Set all loss modules to loss mode
     for i in content_losses:
         i.mode = 'loss'
     for i in style_losses:
         i.mode = 'loss'
+
+    # Maybe normalize content and style weights
+    if params.normalize_weights:
+        NormalizeWeights(content_losses, style_losses)
 
     # Freeze the network in order to prevent
     # unnecessary gradient calculations
@@ -239,7 +239,6 @@ def main():
     def feval():
         num_calls[0] += 1
         optimizer.zero_grad()
-
         net(img)
         loss = 0
 
@@ -329,7 +328,7 @@ def setup_multi_device(net):
     new_net = ModelParallel(net, params.gpu, params.multidevice_strategy)
     return new_net
 
- 
+
 # Preprocess an image before passing it to a model.
 # We need to rescale from [0, 1] to [0, 255], convert from RGB to BGR,
 # and subtract the mean pixel.
@@ -338,7 +337,7 @@ def preprocess(image_name, image_size):
     if type(image_size) is not tuple:
         image_size = tuple([int((float(image_size) / max(image.size))*x) for x in (image.height, image.width)])
     Loader = transforms.Compose([transforms.Resize(image_size), transforms.ToTensor()])
-    rgb2bgr = transforms.Compose([transforms.Lambda(lambda x: x[torch.LongTensor([2,1,0])])])    
+    rgb2bgr = transforms.Compose([transforms.Lambda(lambda x: x[torch.LongTensor([2,1,0])])])
     Normalize = transforms.Compose([transforms.Normalize(mean=[103.939, 116.779, 123.68], std=[1,1,1])])
     tensor = Normalize(rgb2bgr(Loader(image) * 256)).unsqueeze(0)
     return tensor
@@ -347,7 +346,7 @@ def preprocess(image_name, image_size):
 #  Undo the above preprocessing.
 def deprocess(output_tensor):
     Normalize = transforms.Compose([transforms.Normalize(mean=[-103.939, -116.779, -123.68], std=[1,1,1])])
-    bgr2rgb = transforms.Compose([transforms.Lambda(lambda x: x[torch.LongTensor([2,1,0])])])   
+    bgr2rgb = transforms.Compose([transforms.Lambda(lambda x: x[torch.LongTensor([2,1,0])])])
     output_tensor = bgr2rgb(Normalize(output_tensor.squeeze(0).cpu())) / 256
     output_tensor.clamp_(0, 1)
     Image2PIL = transforms.ToPILImage()
@@ -390,16 +389,16 @@ def print_torch(net, multidevice):
          else:
              print(n())
     print(")")
-    
-    
+
+
 # Divide weights by channel size
 def NormalizeWeights(content_losses, style_losses):
-    for n, i in enumerate(content_losses): 		
+    for n, i in enumerate(content_losses):
         i.strength = i.strength**2 / max(i.target.size())
-    for n, i in enumerate(style_losses): 		
+    for n, i in enumerate(style_losses):
         i.strength = i.strength**2 / max(i.target.size())
-       
-    
+
+
 # Define an nn Module to compute content loss
 class ContentLoss(nn.Module):
 
