@@ -6,3 +6,5 @@ out*.png
 *.pth
 models/
 !models/download_models.py
+.git/
+__pycache__/
