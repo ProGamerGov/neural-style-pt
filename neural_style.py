@@ -182,7 +182,7 @@ def main():
 
     # Maybe normalize content and style weights
     if params.normalize_weights:
-        NormalizeWeights(content_losses, style_losses)
+        normalize_weights(content_losses, style_losses)
 
     # Freeze the network in order to prevent
     # unnecessary gradient calculations
@@ -392,7 +392,7 @@ def print_torch(net, multidevice):
 
 
 # Divide weights by channel size
-def NormalizeWeights(content_losses, style_losses):
+def normalize_weights(content_losses, style_losses):
     for n, i in enumerate(content_losses):
         i.strength = i.strength / max(i.target.size())
     for n, i in enumerate(style_losses):
