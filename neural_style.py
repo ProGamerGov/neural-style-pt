@@ -292,12 +292,12 @@ def setup_gpu():
             torch.backends.cudnn.enabled = False
 
     def setup_cpu():
-       if 'mkl' in params.backend and 'mkldnn' not in params.backend:
-           torch.backends.mkl.enabled = True
-       elif 'mkldnn' in params.backend:
-           raise ValueError("MKL-DNN is not supported yet.")
-       elif 'openmp' in params.backend:
-           torch.backends.openmp.enabled = True
+        if 'mkl' in params.backend and 'mkldnn' not in params.backend:
+            torch.backends.mkl.enabled = True
+        elif 'mkldnn' in params.backend:
+            raise ValueError("MKL-DNN is not supported yet.")
+        elif 'openmp' in params.backend:
+            torch.backends.openmp.enabled = True
 
     multidevice = False
     if "," in str(params.gpu):
