@@ -20,6 +20,7 @@ parser.add_argument("-gpu", help="Zero-indexed ID of the GPU to use; for CPU mod
 # Optimization options
 parser.add_argument("-content_weight", type=float, default=5e0)
 parser.add_argument("-style_weight", type=float, default=1e2)
+parser.add_argument("-normalize_weights", action='store_true')
 parser.add_argument("-tv_weight", type=float, default=1e-3)
 parser.add_argument("-num_iterations", type=int, default=1000)
 parser.add_argument("-init", choices=['random', 'image'], default='random')
@@ -60,7 +61,7 @@ def main():
 
     content_image = preprocess(params.content_image, params.image_size).type(dtype)
     style_image_input = params.style_image.split(',')
-    style_image_list, ext = [], [".jpg",".jpeg",".png",".tiff"]
+    style_image_list, ext = [], [".jpg", ".jpeg", ".png", ".tiff"]
     for image in style_image_input:
         if os.path.isdir(image):
             images = (image + "/" + file for file in os.listdir(image)
@@ -179,6 +180,10 @@ def main():
     for i in style_losses:
         i.mode = 'loss'
 
+    # Maybe normalize content and style weights
+    if params.normalize_weights:
+        normalize_weights(content_losses, style_losses)
+
     # Freeze the network in order to prevent
     # unnecessary gradient calculations
     for param in net.parameters():
@@ -287,12 +292,12 @@ def setup_gpu():
             torch.backends.cudnn.enabled = False
 
     def setup_cpu():
-       if 'mkl' in params.backend and 'mkldnn' not in params.backend:
-           torch.backends.mkl.enabled = True
-       elif 'mkldnn' in params.backend:
-           raise ValueError("MKL-DNN is not supported yet.")
-       elif 'openmp' in params.backend:
-           torch.backends.openmp.enabled = True
+        if 'mkl' in params.backend and 'mkldnn' not in params.backend:
+            torch.backends.mkl.enabled = True
+        elif 'mkldnn' in params.backend:
+            raise ValueError("MKL-DNN is not supported yet.")
+        elif 'openmp' in params.backend:
+            torch.backends.openmp.enabled = True
 
     multidevice = False
     if "," in str(params.gpu):
@@ -384,6 +389,14 @@ def print_torch(net, multidevice):
          else:
              print(n())
     print(")")
+
+
+# Divide weights by channel size
+def normalize_weights(content_losses, style_losses):
+    for n, i in enumerate(content_losses):
+        i.strength = i.strength / max(i.target.size())
+    for n, i in enumerate(style_losses):
+        i.strength = i.strength / max(i.target.size())
 
 
 # Define an nn Module to compute content loss
