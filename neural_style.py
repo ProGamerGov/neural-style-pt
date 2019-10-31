@@ -13,11 +13,11 @@ parser = argparse.ArgumentParser()
 # Basic options
 
 parser.add_argument("-style_image", help="Style target image", default='examples/inputs/cubist.jpg,examples/inputs/starry_night.jpg')
-parser.add_argument("-style_seg", help="Style segmentation images", default='examples/segments/cubist.png,examples/segments/starry_night.png')
+parser.add_argument("-style_seg", help="Style segmentation images", default=None)
 parser.add_argument("-style_blend_weights", default=None)
 parser.add_argument("-content_image", help="Content target image", default='examples/inputs/monalisa.jpg')
-parser.add_argument("-content_seg", help="Content segmentation image", default='examples/segments/monalisa.png')
-parser.add_argument("-color_codes", help="Colors used in content mask (blue,green,black,white,red,yellow,grey,lightblue,purple)", default='white,black')
+parser.add_argument("-content_seg", help="Content segmentation image", default=None)
+parser.add_argument("-color_codes", help="Colors used in content mask (blue,green,black,white,red,yellow,grey,lightblue,purple)", default=None)
 parser.add_argument("-image_size", help="Maximum height / width of generated image", type=int, default=512)
 parser.add_argument("-gpu", help="Zero-indexed ID of the GPU to use; for CPU mode set -gpu = c", default=0)
 
@@ -142,6 +142,34 @@ def main():
 
     for i, layer in enumerate(list(cnn), 1):
         if next_content_idx <= len(content_layers) or next_style_idx <= len(style_layers):
+
+
+            if params.content_seg != None and params.style_seg != None:
+                if isinstance(layer, nn.MaxPool2d) or isinstance(layer, nn.AvgPool2d):
+                    for k in range(len(color_codes)):
+                        h, w = color_content_masks[k].shape
+                        h, w = int(h/2), int(w/2)
+                        color_content_masks[k] = torch.nn.functional.interpolate(
+                            color_content_masks[k].repeat(1,1,1,1), mode='bilinear', size=(h, w))[0][0]
+                    for j in range(len(style_image_list)):
+                        for k in range(len(color_codes)):
+                            h, w = color_style_masks[j][k].shape
+                            h, w = int(h/2), int(w/2)
+                            color_style_masks[j][k] = torch.nn.functional.interpolate(
+                                color_style_masks[j][k].repeat(1,1,1,1), mode='bilinear', size=(h, w))[0][0]
+                        color_style_masks[j] = copy.deepcopy(color_style_masks[j])
+
+                elif isinstance(layer, nn.Conv2d):
+
+                    sap = nn.AvgPool2d(kernel_size=(3,3), stride=(1, 1), padding=(1,1))
+                    for k in range(len(color_codes)):
+                        color_content_masks[k] = sap(color_content_masks[k].repeat(1,1,1))[0].clone()
+                    for j in range(len(style_image_list)):
+                        for k in range(len(color_codes)):
+                            color_style_masks[j][k] = sap(color_style_masks[j][k].repeat(1,1,1))[0].clone()
+                        color_style_masks[j] = copy.deepcopy(color_style_masks[j])
+
+
             if isinstance(layer, nn.Conv2d):
                 net.add_module(str(len(net)), layer)
 
@@ -170,7 +198,11 @@ def main():
 
                 if layerList['R'][r] in style_layers:
                     print("Setting up style layer " + str(i) + ": " + str(layerList['R'][r]))
-                    loss_module = StyleLoss(params.style_weight)
+                    #loss_module = StyleLoss(params.style_weight)
+                    if params.content_seg != None:
+                        loss_module = MaskedStyleLoss(params.style_weight, color_style_masks, color_content_masks, color_codes)
+                    else:
+                        loss_module = StyleLoss(params.style_weight)
                     net.add_module(str(len(net)), loss_module)
                     style_losses.append(loss_module)
                     next_style_idx += 1
@@ -276,7 +308,7 @@ def main():
             for mod in tv_losses:
                 loss += mod.loss.to(backward_device)
 
-        loss.backward()
+        loss.backward(retain_graph=True)
 
         maybe_save(num_calls[0])
         maybe_print(num_calls[0], loss)
@@ -494,6 +526,57 @@ class StyleLoss(nn.Module):
         elif self.mode == 'loss':
             self.loss = self.strength * self.crit(self.G, self.target)
         return input
+
+
+# Define an nn Module to compute style loss with segmentation mask
+class MaskedStyleLoss(nn.Module):
+
+    def __init__(self, strength, color_style_masks, color_content_masks, color_codes):
+        super(MaskedStyleLoss, self).__init__()
+        self.target_grams = []
+        self.masked_grams = []
+        self.masked_features = []
+        self.strength = strength
+        self.gram = GramMatrix()
+        self.crit = nn.MSELoss()
+        self.mode = 'None'
+        self.blend_weight = None
+        self.color_style_masks = copy.deepcopy(color_style_masks)
+        self.color_content_masks = copy.deepcopy(color_content_masks)
+        self.color_codes = color_codes
+        self.capture_count = 0
+
+    def forward(self, input):
+        self.loss = 0
+        if self.mode == 'capture':
+            masks = self.color_style_masks[self.capture_count]
+            self.capture_count += 1
+        elif self.mode == 'loss':
+            masks = self.color_content_masks
+            self.color_style_masks = None
+        if self.mode != 'None':
+            for j in range(len(self.color_codes)):
+                l_mask_ori = masks[j].clone()
+                l_mask = l_mask_ori.repeat(1,1,1).expand(input.size())
+                l_mean = l_mask_ori.mean()
+                masked_feature = l_mask.mul(input)
+                masked_gram = self.gram(masked_feature).clone()
+                if l_mean > 0:
+                    masked_gram = masked_gram.div(input.nelement() * l_mean)
+                if self.mode == 'capture':
+                    if j >= len(self.target_grams):
+                        self.target_grams.append(masked_gram.mul(self.blend_weight))
+                        self.masked_grams.append(self.target_grams[j].clone())
+                        self.masked_features.append(masked_feature)
+                    else:
+                        self.target_grams[j].add(masked_gram.mul(self.blend_weight))
+                elif self.mode == 'loss':
+                    self.masked_grams[j] = masked_gram
+                    self.masked_features[j] = masked_feature
+                    lossAmt = self.crit(self.masked_grams[j], self.target_grams[j]) * l_mean * self.strength
+                    self.loss += lossAmt
+        return input
+
 
 
 class TVLoss(nn.Module):
