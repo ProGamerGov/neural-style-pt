@@ -12,7 +12,7 @@ import argparse
 parser = argparse.ArgumentParser()
 # Basic options
 
-parser.add_argument("-style_image", help="Style target image", default='examples/inputs/cubist.jpg,examples/inputs/starry_night.jpg')
+parser.add_argument("-style_image", help="Style target image", default='examples/inputs/starry_night.jpg')
 parser.add_argument("-style_seg", help="Style segmentation images", default=None)
 parser.add_argument("-style_blend_weights", default=None)
 parser.add_argument("-content_image", help="Content target image", default='examples/inputs/monalisa.jpg')
