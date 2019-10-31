@@ -11,9 +11,13 @@ from CaffeLoader import loadCaffemodel, ModelParallel
 import argparse
 parser = argparse.ArgumentParser()
 # Basic options
-parser.add_argument("-style_image", help="Style target image", default='examples/inputs/seated-nude.jpg')
+
+parser.add_argument("-style_image", help="Style target image", default='examples/inputs/cubist.jpg,examples/inputs/starry_night.jpg')
+parser.add_argument("-style_seg", help="Style segmentation images", default='examples/segments/cubist.png,examples/segments/starry_night.png')
 parser.add_argument("-style_blend_weights", default=None)
-parser.add_argument("-content_image", help="Content target image", default='examples/inputs/tubingen.jpg')
+parser.add_argument("-content_image", help="Content target image", default='examples/inputs/monalisa.jpg')
+parser.add_argument("-content_seg", help="Content segmentation image", default='examples/segments/monalisa.png')
+parser.add_argument("-color_codes", help="Colors used in content mask (blue,green,black,white,red,yellow,grey,lightblue,purple)", default='white,black')
 parser.add_argument("-image_size", help="Maximum height / width of generated image", type=int, default=512)
 parser.add_argument("-gpu", help="Zero-indexed ID of the GPU to use; for CPU mode set -gpu = c", default=0)
 
@@ -78,6 +82,28 @@ def main():
     if params.init_image != None:
         image_size = (content_image.size(2), content_image.size(3))
         init_image = preprocess(params.init_image, image_size).type(dtype)
+
+    # setup segmentation masks
+    style_seg_images_caffe = []
+    color_content_masks, color_style_masks, color_codes = [], [], []
+    if params.content_seg != None and params.style_seg != None and params.color_codes != None:
+        color_codes = params.color_codes.split(",")
+        content_seg_caffe = preprocess(params.content_seg, params.image_size, to_normalize=False).type(dtype)
+        style_seg_list = params.style_seg.split(",")
+        assert(len(style_seg_list) == len(style_image_list), \
+            "-style_seg and -style_image must have the same number of elements")
+        for image in style_seg_list:
+            style_seg_caffe = preprocess(image, params.image_size, to_normalize=False).type(dtype)
+            style_seg_images_caffe.append(style_seg_caffe)
+        for j in range(len(color_codes)):
+            content_mask_j = ExtractMask(content_seg_caffe[0], color_codes[j], dtype)
+            color_content_masks.append(content_mask_j)
+        for i in range(len(style_image_list)):
+            tmp_table = []
+            for j in range(len(color_codes)):
+                style_mask_i_j = ExtractMask(style_seg_images_caffe[i][0], color_codes[j], dtype)
+                tmp_table.append(style_mask_i_j)
+            color_style_masks.append(tmp_table)
 
     # Handle style blending weights for multiple style inputs
     style_blend_weights = []
@@ -332,14 +358,17 @@ def setup_multi_device(net):
 # Preprocess an image before passing it to a model.
 # We need to rescale from [0, 1] to [0, 255], convert from RGB to BGR,
 # and subtract the mean pixel.
-def preprocess(image_name, image_size):
+def preprocess(image_name, image_size, to_normalize=True):
     image = Image.open(image_name).convert('RGB')
     if type(image_size) is not tuple:
         image_size = tuple([int((float(image_size) / max(image.size))*x) for x in (image.height, image.width)])
     Loader = transforms.Compose([transforms.Resize(image_size), transforms.ToTensor()])
     rgb2bgr = transforms.Compose([transforms.Lambda(lambda x: x[torch.LongTensor([2,1,0])])])
-    Normalize = transforms.Compose([transforms.Normalize(mean=[103.939, 116.779, 123.68], std=[1,1,1])])
-    tensor = Normalize(rgb2bgr(Loader(image) * 256)).unsqueeze(0)
+    if to_normalize:
+        Normalize = transforms.Compose([transforms.Normalize(mean=[103.939, 116.779, 123.68], std=[1,1,1])])
+        tensor = Normalize(rgb2bgr(Loader(image) * 256)).unsqueeze(0)
+    else:
+        tensor = rgb2bgr(Loader(image)).unsqueeze(0)
     return tensor
 
 
@@ -352,6 +381,22 @@ def deprocess(output_tensor):
     Image2PIL = transforms.ToPILImage()
     image = Image2PIL(output_tensor.cpu())
     return image
+
+
+# extract a mask from a colored segmentation image
+def ExtractMask(seg, color, dtype):
+    mask = None
+    if color == 'black':
+        mask = seg[0].lt(0.1)
+        mask = mask.mul(seg[1].lt(0.1))
+        mask = mask.mul(seg[2].lt(0.1))
+    elif color == 'white':
+        mask = seg[0].gt(0.9)
+        mask = mask.mul(seg[1].gt(0.9))
+        mask = mask.mul(seg[2].gt(0.9))
+    else:
+        print('ExtractMask(): color not recognized, color = ', color)
+    return mask.type(dtype)
 
 
 # Combine the Y channel of the generated image and the UV/CbCr channels of the
