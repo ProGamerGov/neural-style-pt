@@ -223,7 +223,7 @@ def main():
 
     # Capture style targets
     for i in content_losses:
-        i.mode = 'None'
+        i.mode = 'none'
 
     for i, image in enumerate(style_images_caffe):
         print("Capturing style target " + str(i+1))
@@ -308,7 +308,7 @@ def main():
             for mod in tv_losses:
                 loss += mod.loss.to(backward_device)
 
-        loss.backward(retain_graph=True)
+        loss.backward()
 
         maybe_save(num_calls[0])
         maybe_print(num_calls[0], loss)
@@ -483,7 +483,7 @@ class ContentLoss(nn.Module):
         super(ContentLoss, self).__init__()
         self.strength = strength
         self.crit = nn.MSELoss()
-        self.mode = 'None'
+        self.mode = 'none'
 
     def forward(self, input):
         if self.mode == 'loss':
@@ -510,7 +510,7 @@ class StyleLoss(nn.Module):
         self.strength = strength
         self.gram = GramMatrix()
         self.crit = nn.MSELoss()
-        self.mode = 'None'
+        self.mode = 'none'
         self.blend_weight = None
 
     def forward(self, input):
@@ -539,7 +539,7 @@ class MaskedStyleLoss(nn.Module):
         self.strength = strength
         self.gram = GramMatrix()
         self.crit = nn.MSELoss()
-        self.mode = 'None'
+        self.mode = 'none'
         self.blend_weight = None
         self.color_style_masks = copy.deepcopy(color_style_masks)
         self.color_content_masks = copy.deepcopy(color_content_masks)
@@ -547,14 +547,14 @@ class MaskedStyleLoss(nn.Module):
         self.capture_count = 0
 
     def forward(self, input):
-        self.loss = 0
         if self.mode == 'capture':
             masks = self.color_style_masks[self.capture_count]
             self.capture_count += 1
         elif self.mode == 'loss':
             masks = self.color_content_masks
             self.color_style_masks = None
-        if self.mode != 'None':
+        if self.mode != 'none':
+            loss = 0
             for j in range(len(self.color_codes)):
                 l_mask_ori = masks[j].clone()
                 l_mask = l_mask_ori.repeat(1,1,1).expand(input.size())
@@ -565,7 +565,7 @@ class MaskedStyleLoss(nn.Module):
                     masked_gram = masked_gram.div(input.nelement() * l_mean)
                 if self.mode == 'capture':
                     if j >= len(self.target_grams):
-                        self.target_grams.append(masked_gram.mul(self.blend_weight))
+                        self.target_grams.append(masked_gram.detach().mul(self.blend_weight))
                         self.masked_grams.append(self.target_grams[j].clone())
                         self.masked_features.append(masked_feature)
                     else:
@@ -573,8 +573,8 @@ class MaskedStyleLoss(nn.Module):
                 elif self.mode == 'loss':
                     self.masked_grams[j] = masked_gram
                     self.masked_features[j] = masked_feature
-                    lossAmt = self.crit(self.masked_grams[j], self.target_grams[j]) * l_mean * self.strength
-                    self.loss += lossAmt
+                    loss += self.crit(self.masked_grams[j], self.target_grams[j]) * l_mean * self.strength
+            self.loss = loss
         return input
 
 
