@@ -569,7 +569,7 @@ class MaskedStyleLoss(nn.Module):
                         self.masked_grams.append(self.target_grams[j].clone())
                         self.masked_features.append(masked_feature)
                     else:
-                        self.target_grams[j].add(masked_gram.mul(self.blend_weight))
+                        self.target_grams[j] += masked_gram.detach().mul(self.blend_weight)
                 elif self.mode == 'loss':
                     self.masked_grams[j] = masked_gram
                     self.masked_features[j] = masked_feature
