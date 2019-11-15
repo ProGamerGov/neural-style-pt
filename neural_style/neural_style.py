@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import absolute_import
 import os
 import copy
 import torch
@@ -7,7 +8,7 @@ import torch.optim as optim
 import torchvision.transforms as transforms
 
 from PIL import Image
-from loader.CaffeLoader import loadCaffemodel, ModelParallel
+from .loader.CaffeLoader import loadCaffemodel, ModelParallel
 
 import argparse
 parser = argparse.ArgumentParser()
