@@ -11,8 +11,8 @@ onto a night-time photograph of the Stanford campus:
 <div align="center">
  <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/inputs/starry_night_google.jpg" height="223px">
  <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/inputs/hoovertowernight.jpg" height="223px">
- <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/outputs/starry_stanford_big.png" width="710px">
-</div> 
+ <img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/outputs/starry_stanford_bigger.png" width="710px">
+</div>
 
 Applying the style of different images to the same content image gives interesting results.
 Here we reproduce Figure 2 from the paper, which renders a photograph of the Tubingen in Germany in a
@@ -134,6 +134,12 @@ Optional dependencies:
   * CUDA 7.5 or above
 * For cuDNN backend:
   * cuDNN v6 or above
+* For ROCm backend:
+  * ROCm 2.1 or above
+* For MKL backend:
+  * MKL 2019 or above
+* For OpenMP backend:
+  * OpenMP 5.0 or above
 
 After installing the dependencies, you'll need to run the following script to download the VGG model:
 ```
@@ -144,7 +150,7 @@ The original [VGG-16 model](https://gist.github.com/ksimonyan/211839e770f7b538e2
 
 If you have a smaller memory GPU then using NIN Imagenet model will be better and gives slightly worse yet comparable results. You can get the details on the model from [BVLC Caffe ModelZoo](https://github.com/BVLC/caffe/wiki/Model-Zoo). The NIN model is downloaded when you run the `download_models.py` script.
 
-You can find detailed installation instructions for Ubuntu in the [installation guide](INSTALL.md).
+You can find detailed installation instructions for Ubuntu and Windows in the [installation guide](INSTALL.md).
 
 ## Usage
 Basic usage:
@@ -172,7 +178,7 @@ path or a full absolute path.
 * `-style_blend_weights`: The weight for blending the style of multiple style images, as a
   comma-separated list, such as `-style_blend_weights 3,7`. By default all style images
   are equally weighted.
-* `-gpu`: Zero-indexed ID of the GPU to use; for CPU mode set `-gpu` to -1.
+* `-gpu`: Zero-indexed ID of the GPU to use; for CPU mode set `-gpu` to `c`.
 
 **Optimization options**:
 * `-content_weight`: How much to weight the content reconstruction term. Default is 5e0.
@@ -183,6 +189,7 @@ path or a full absolute path.
 * `-init`: Method for generating the generated image; one of `random` or `image`.
   Default is `random` which uses a noise initialization as in the paper; `image`
   initializes with the content image.
+* `-init_image`: Replaces the initialization image with a user specified image.
 * `-optimizer`: The optimization algorithm to use; either `lbfgs` or `adam`; default is `lbfgs`.
   L-BFGS tends to give better results, but uses more memory. Switching to ADAM will reduce memory usage;
   when using ADAM you will probably need to play with other parameters to get good results, especially
@@ -203,14 +210,14 @@ path or a full absolute path.
 **Other options**:
 * `-style_scale`: Scale at which to extract features from the style image. Default is 1.0.
 * `-original_colors`: If you set this to 1, then the output image will keep the colors of the content image.
-* `-model_file`: Path to the `.pth` file for the VGG Caffe model which was converted to PyTorch.
-  Default is the original VGG-19 model; you can also try the original VGG-16 model.
+* `-model_file`: Path to the `.pth` file for the VGG Caffe model. Default is the original VGG-19 model; you can also try the original VGG-16 model.
 * `-pooling`: The type of pooling layers to use; one of `max` or `avg`. Default is `max`.
   The VGG-19 models uses max pooling layers, but the paper mentions that replacing these layers with average
   pooling layers can improve the results. I haven't been able to get good results using average pooling, but
   the option is here.
-* `-backend`: `nn`, `cudnn`, or `mkl`. Default is `nn`.
-  `mkl` requires Intel's MKL backend.
+* `-seed`: An integer value that you can specify for repeatable results. By default this value is random for each run.
+* `-multidevice_strategy`: A comma-separated list of layer indices at which to split the network when using multiple devices. See [Multi-GPU scaling](https://github.com/ProGamerGov/neural-style-pt#multi-gpu-scaling) for more details.
+* `-backend`: `nn`, `cudnn`, `openmp`, or `mkl`. Default is `nn`. `mkl` requires Intel's MKL backend.
 * `-cudnn_autotune`: When using the cuDNN backend, pass this flag to use the built-in cuDNN autotuner to select
   the best convolution algorithms for your architecture. This will make the first iteration a bit slower and can
   take a bit more memory, but may significantly speed up the cuDNN backend.
@@ -246,7 +253,7 @@ By default, `neural-style-pt` uses the `nn` backend for convolutions and L-BFGS 
   This should work in both CPU and GPU modes.
 * **Reduce image size**: If the above tricks are not enough, you can reduce the size of the generated image;
   pass the flag `-image_size 256` to generate an image at half the default size.
-  
+
 With the default settings, neural-style-pt uses about 3.7 GB of GPU memory on my system; switching to ADAM and cuDNN reduces the GPU memory footprint to about 1GB.
 
 ## Speed
@@ -266,7 +273,26 @@ Here are the same benchmarks on a GTX 1080:
 * `-backend cudnn -optimizer adam`: 40 seconds
 * `-backend cudnn -cudnn_autotune -optimizer lbfgs`: 23 seconds
 * `-backend cudnn -cudnn_autotune -optimizer adam`: 24 seconds
-  
+
+## Multi-GPU scaling
+You can use multiple CPU and GPU devices to process images at higher resolutions; different layers of the network will be
+computed on different devices. You can control which GPU and CPU devices are used with the `-gpu` flag, and you can control
+how to split layers across devices using the `-multidevice_strategy` flag.
+
+For example in a server with four GPUs, you can give the flag `-gpu 0,1,2,3` to process on GPUs 0, 1, 2, and 3 in that order; by also giving the flag `-multidevice_strategy 3,6,12` you indicate that the first two layers should be computed on GPU 0, layers 3 to 5 should be computed on GPU 1, layers 6 to 11 should be computed on GPU 2, and the remaining layers should be computed on GPU 3. You will need to tune the `-multidevice_strategy` for your setup in order to achieve maximal resolution.
+
+We can achieve very high quality results at high resolution by combining multi-GPU processing with multiscale
+generation as described in the paper
+<a href="https://arxiv.org/abs/1611.07865">**Controlling Perceptual Factors in Neural Style Transfer**</a> by Leon A. Gatys,
+Alexander S. Ecker, Matthias Bethge, Aaron Hertzmann and Eli Shechtman.
+
+
+Here is a 4016 x 2213 image generated on a server with eight Tesla K80 GPUs:
+
+<img src="https://raw.githubusercontent.com/ProGamerGov/neural-style-pt/master/examples/outputs/starry_stanford_bigger.png" height="400px">
+
+The script used to generate this image <a href='examples/scripts/starry_stanford_bigger.sh'>can be found here</a>.
+
 ## Implementation details
 Images are initialized with white noise and optimized using L-BFGS.
 

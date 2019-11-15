@@ -17,6 +17,49 @@ class VGG(nn.Module):
         )
 
 
+class VGG_SOD(nn.Module):
+    def __init__(self, features, num_classes=100):
+        super(VGG_SOD, self).__init__()
+        self.features = features
+        self.classifier = nn.Sequential(
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, 100),
+        )
+
+
+class VGG_FCN32S(nn.Module):
+    def __init__(self, features, num_classes=1000):
+        super(VGG_FCN32S, self).__init__()
+        self.features = features
+        self.classifier = nn.Sequential(
+            nn.Conv2d(512,4096,(7, 7)),
+            nn.ReLU(True),
+            nn.Dropout(0.5),
+            nn.Conv2d(4096,4096,(1, 1)),
+            nn.ReLU(True),
+            nn.Dropout(0.5),
+        )
+
+
+class VGG_PRUNED(nn.Module):
+    def __init__(self, features, num_classes=1000):
+        super(VGG_PRUNED, self).__init__()
+        self.features = features
+        self.classifier = nn.Sequential(
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(True),
+            nn.Dropout(0.5),
+            nn.Linear(4096, 4096),
+            nn.ReLU(True),
+            nn.Dropout(0.5),
+        )
+
+
 class NIN(nn.Module):
     def __init__(self, pooling):
         super(NIN, self).__init__()
@@ -60,6 +103,54 @@ class NIN(nn.Module):
 
 
 
+class ModelParallel(nn.Module):
+    def __init__(self, net, device_ids, device_splits):
+        super(ModelParallel, self).__init__()
+        self.device_list = self.name_devices(device_ids.split(','))
+        self.chunks = self.chunks_to_devices(self.split_net(net, device_splits.split(',')))
+
+    def name_devices(self, input_list):
+        device_list = []
+        for i, device in enumerate(input_list):
+            if str(device).lower() != 'c':
+                device_list.append("cuda:" + str(device))
+            else:
+                device_list.append("cpu")
+        return device_list
+
+    def split_net(self, net, device_splits):
+        chunks, cur_chunk = [], nn.Sequential()
+        for i, l in enumerate(net):
+            cur_chunk.add_module(str(i), net[i])
+            if str(i) in device_splits and device_splits != '':
+                del device_splits[0]
+                chunks.append(cur_chunk)
+                cur_chunk = nn.Sequential()
+        chunks.append(cur_chunk)
+        return chunks
+
+    def chunks_to_devices(self, chunks):
+        for i, chunk in enumerate(chunks):
+            chunk.to(self.device_list[i])
+        return chunks
+
+    def c(self, input, i):
+        if input.type() == 'torch.FloatTensor' and 'cuda' in self.device_list[i]:
+            input = input.type('torch.cuda.FloatTensor')
+        elif input.type() == 'torch.cuda.FloatTensor' and 'cpu' in self.device_list[i]:
+            input = input.type('torch.FloatTensor')
+        return input
+
+    def forward(self, input):
+        for i, chunk in enumerate(self.chunks):
+            if i < len(self.chunks) -1:
+                input = self.c(chunk(self.c(input, i).to(self.device_list[i])), i+1).to(self.device_list[i+1])
+            else:
+                input = chunk(input)
+        return input
+
+
+
 def buildSequential(channel_list, pooling):
     layers = []
     in_channels = 3
@@ -67,7 +158,7 @@ def buildSequential(channel_list, pooling):
         pool2d = nn.MaxPool2d(kernel_size=2, stride=2)
     elif pooling == 'avg':
         pool2d = nn.AvgPool2d(kernel_size=2, stride=2)
-    else: 
+    else:
         raise ValueError("Unrecognized pooling parameter")
     for c in channel_list:
         if c == 'P':
@@ -80,12 +171,13 @@ def buildSequential(channel_list, pooling):
 
 
 channel_list = {
+'VGG-16p': [24, 22, 'P', 41, 51, 'P', 108, 89, 111, 'P', 184, 276, 228, 'P', 512, 512, 512, 'P'],
 'VGG-16': [64, 64, 'P', 128, 128, 'P', 256, 256, 256, 'P', 512, 512, 512, 'P', 512, 512, 512, 'P'],
 'VGG-19': [64, 64, 'P', 128, 128, 'P', 256, 256, 256, 256, 'P', 512, 512, 512, 512, 'P', 512, 512, 512, 512, 'P'],
 }
 
 nin_dict = {
-'C': ['conv1', 'cccp1', 'cccp2', 'conv2', 'cccp3', 'cccp4', 'conv3', 'cccp5', 'cccp6', 'conv4-1024', 'cccp7-1024', 'cccp8-1024'], 
+'C': ['conv1', 'cccp1', 'cccp2', 'conv2', 'cccp3', 'cccp4', 'conv3', 'cccp5', 'cccp6', 'conv4-1024', 'cccp7-1024', 'cccp8-1024'],
 'R': ['relu0', 'relu1', 'relu2', 'relu3', 'relu5', 'relu6', 'relu7', 'relu8', 'relu9', 'relu10', 'relu11', 'relu12'],
 'P': ['pool1', 'pool2', 'pool3', 'pool4'],
 'D': ['drop'],
@@ -103,8 +195,24 @@ vgg19_dict = {
 
 
 def modelSelector(model_file, pooling, verbose):
-    if "vgg" in model_file:
-        if "19" in model_file:
+    vgg_list = ["fcn32s", "pruning", "sod", "vgg"]
+    if any(name in model_file for name in vgg_list):
+        if "pruning" in model_file:
+            if(verbose == 1):          
+              print("VGG-16 Architecture Detected")
+              print("Using The Channel Pruning Model")
+            cnn, layerList = VGG_PRUNED(buildSequential(channel_list['VGG-16p'], pooling)), vgg16_dict
+        elif "fcn32s" in model_file:
+            if(verbose == 1):
+              print("VGG-16 Architecture Detected")
+              print("Using the fcn32s-heavy-pascal Model")
+            cnn, layerList = VGG_FCN32S(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
+        elif "sod" in model_file:
+            if(verbose == 1):
+              print("VGG-16 Architecture Detected")
+              print("Using The SOD Fintune Model")
+            cnn, layerList = VGG_SOD(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
+        elif "19" in model_file:
             if(verbose == 1):
                 print("VGG-19 Architecture Detected")
             cnn, layerList = VGG(buildSequential(channel_list['VGG-19'], pooling)), vgg19_dict
@@ -113,7 +221,7 @@ def modelSelector(model_file, pooling, verbose):
                 print("VGG-16 Architecture Detected")
             cnn, layerList = VGG(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
         else:
-            raise ValueError("VGG architecture not recognized.")    
+            raise ValueError("VGG architecture not recognized.")
     elif "nin" in model_file:
         if(verbose == 1):
             print("NIN Architecture Detected")
@@ -122,8 +230,9 @@ def modelSelector(model_file, pooling, verbose):
         raise ValueError("Model architecture not recognized.")
     return cnn, layerList
 
+
 # Print like Torch7/loadcaffe
-def print_loadcaffe(cnn, layerList): 
+def print_loadcaffe(cnn, layerList):
     c = 0
     for l in list(cnn):
          if "Conv2d" in str(l):
@@ -133,17 +242,19 @@ def print_loadcaffe(cnn, layerList):
          if c == len(layerList['C']):
              break
 
+
 # Load the model, and configure pooling layer type
-def loadCaffemodel(model_file, pooling, use_gpu, verbose):
+def loadCaffemodel(model_file, pooling, use_gpu, disable_check, verbose):
     cnn, layerList = modelSelector(str(model_file).lower(), pooling, verbose)
-    cnn.load_state_dict(torch.load(model_file))
+
+    cnn.load_state_dict(torch.load(model_file), strict=(not disable_check))
     if(verbose == 1):
         print("Successfully loaded " + str(model_file))
 
     # Maybe convert the model to cuda now, to avoid later issues
-    if use_gpu > -1:
+    if "c" not in str(use_gpu).lower() or "c" not in str(use_gpu[0]).lower():
         cnn = cnn.cuda()
-    cnn = cnn.features 
+    cnn = cnn.features
 
     #print_loadcaffe(cnn, layerList)
 
