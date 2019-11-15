@@ -243,7 +243,7 @@ def print_loadcaffe(cnn, layerList):
 
 
 # Load the model, and configure pooling layer type
-def loadCaffemodel(model_file, pooling, use_gpu, disable_check):
+def loadCaffemodel(model_file, pooling, use_gpu, disable_check, verbose):
     cnn, layerList = modelSelector(str(model_file).lower(), pooling, verbose)
 
     cnn.load_state_dict(torch.load(model_file), strict=(not disable_check))
