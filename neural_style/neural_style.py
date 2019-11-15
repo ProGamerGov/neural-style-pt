@@ -60,7 +60,7 @@ Image.MAX_IMAGE_PIXELS = 1000000000 # Support gigapixel images
 
 def main():
     if params.download_models:
-        from loader.CaffeLoader import downloadModels
+        from .loader.CaffeLoader import downloadModels
         downloadModels(params.download_models)
     if params.content_image == '':
         raise ValueError("You must select a content image.")
