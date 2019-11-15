@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 
-
 class VGG(nn.Module):
     def __init__(self, features, num_classes=1000):
         super(VGG, self).__init__()
@@ -194,31 +193,37 @@ vgg19_dict = {
 }
 
 
-def modelSelector(model_file, pooling):
+def modelSelector(model_file, pooling, verbose):
     vgg_list = ["fcn32s", "pruning", "sod", "vgg"]
     if any(name in model_file for name in vgg_list):
         if "pruning" in model_file:
-            print("VGG-16 Architecture Detected")
-            print("Using The Channel Pruning Model")
+            if(verbose == 1):
+                print("VGG-16 Architecture Detected")
+                print("Using The Channel Pruning Model")
             cnn, layerList = VGG_PRUNED(buildSequential(channel_list['VGG-16p'], pooling)), vgg16_dict
         elif "fcn32s" in model_file:
-            print("VGG-16 Architecture Detected")
-            print("Using the fcn32s-heavy-pascal Model")
+            if(verbose == 1):
+                print("VGG-16 Architecture Detected")
+                print("Using the fcn32s-heavy-pascal Model")
             cnn, layerList = VGG_FCN32S(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
         elif "sod" in model_file:
-            print("VGG-16 Architecture Detected")
-            print("Using The SOD Fintune Model")
+            if(verbose == 1):
+                print("VGG-16 Architecture Detected")
+                print("Using The SOD Fintune Model")
             cnn, layerList = VGG_SOD(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
         elif "19" in model_file:
-            print("VGG-19 Architecture Detected")
+            if(verbose == 1):
+                print("VGG-19 Architecture Detected")
             cnn, layerList = VGG(buildSequential(channel_list['VGG-19'], pooling)), vgg19_dict
         elif "16" in model_file:
-            print("VGG-16 Architecture Detected")
+            if(verbose == 1):
+                print("VGG-16 Architecture Detected")
             cnn, layerList = VGG(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
         else:
             raise ValueError("VGG architecture not recognized.")
     elif "nin" in model_file:
-        print("NIN Architecture Detected")
+        if(verbose == 1):
+            print("NIN Architecture Detected")
         cnn, layerList = NIN(pooling), nin_dict
     else:
         raise ValueError("Model architecture not recognized.")
@@ -239,16 +244,17 @@ def print_loadcaffe(cnn, layerList):
 
 # Load the model, and configure pooling layer type
 def loadCaffemodel(model_file, pooling, use_gpu, disable_check):
-    cnn, layerList = modelSelector(str(model_file).lower(), pooling)
+    cnn, layerList = modelSelector(str(model_file).lower(), pooling, verbose)
 
     cnn.load_state_dict(torch.load(model_file), strict=(not disable_check))
-    print("Successfully loaded " + str(model_file))
+    if(verbose == 1):
+        print("Successfully loaded " + str(model_file))
 
     # Maybe convert the model to cuda now, to avoid later issues
     if "c" not in str(use_gpu).lower() or "c" not in str(use_gpu[0]).lower():
         cnn = cnn.cuda()
     cnn = cnn.features
 
-    print_loadcaffe(cnn, layerList)
+    #print_loadcaffe(cnn, layerList)
 
     return cnn, layerList

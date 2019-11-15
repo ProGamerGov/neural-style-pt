@@ -33,6 +33,7 @@ parser.add_argument("-lbfgs_num_correction", type=int, default=100)
 parser.add_argument("-print_iter", type=int, default=50)
 parser.add_argument("-save_iter", type=int, default=100)
 parser.add_argument("-output_image", default='out.png')
+parser.add_argument("-verbose", type=int, choices=[0 ,1], default=1)
 
 # Other options
 parser.add_argument("-style_scale", type=float, default=1.0)
@@ -50,14 +51,12 @@ parser.add_argument("-style_layers", help="layers for style", default='relu1_1,r
 parser.add_argument("-multidevice_strategy", default='4,7,29')
 params = parser.parse_args()
 
-
 Image.MAX_IMAGE_PIXELS = 1000000000 # Support gigapixel images
 
 
 def main():
     dtype, multidevice, backward_device = setup_gpu()
-
-    cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu, params.disable_check)
+    cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu, params.disable_check, params.verbose)
 
     content_image = preprocess(params.content_image, params.image_size).type(dtype)
     style_image_input = params.style_image.split(',')
@@ -120,13 +119,15 @@ def main():
                 net.add_module(str(len(net)), layer)
 
                 if layerList['C'][c] in content_layers:
-                    print("Setting up content layer " + str(i) + ": " + str(layerList['C'][c]))
+                    if(params.verbose == 1):
+                        print("Setting up content layer " + str(i) + ": " + str(layerList['C'][c]))
                     loss_module = ContentLoss(params.content_weight)
                     net.add_module(str(len(net)), loss_module)
                     content_losses.append(loss_module)
 
                 if layerList['C'][c] in style_layers:
-                    print("Setting up style layer " + str(i) + ": " + str(layerList['C'][c]))
+                    if(params.verbose == 1):
+                        print("Setting up style layer " + str(i) + ": " + str(layerList['C'][c]))
                     loss_module = StyleLoss(params.style_weight)
                     net.add_module(str(len(net)), loss_module)
                     style_losses.append(loss_module)
@@ -136,14 +137,16 @@ def main():
                 net.add_module(str(len(net)), layer)
 
                 if layerList['R'][r] in content_layers:
-                    print("Setting up content layer " + str(i) + ": " + str(layerList['R'][r]))
+                    if(params.verbose == 1):
+                        print("Setting up content layer " + str(i) + ": " + str(layerList['R'][r]))
                     loss_module = ContentLoss(params.content_weight)
                     net.add_module(str(len(net)), loss_module)
                     content_losses.append(loss_module)
                     next_content_idx += 1
 
                 if layerList['R'][r] in style_layers:
-                    print("Setting up style layer " + str(i) + ": " + str(layerList['R'][r]))
+                    if(params.verbose == 1):
+                        print("Setting up style layer " + str(i) + ": " + str(layerList['R'][r]))
                     loss_module = StyleLoss(params.style_weight)
                     net.add_module(str(len(net)), loss_module)
                     style_losses.append(loss_module)
@@ -159,8 +162,9 @@ def main():
     # Capture content targets
     for i in content_losses:
         i.mode = 'capture'
-    print("Capturing content targets")
-    print_torch(net, multidevice)
+    if(params.verbose == 1):
+        print("Capturing content targets")
+        print_torch(net, multidevice)
     net(content_image)
 
     # Capture style targets
@@ -168,7 +172,8 @@ def main():
         i.mode = 'None'
 
     for i, image in enumerate(style_images_caffe):
-        print("Capturing style target " + str(i+1))
+        if(params.verbose == 1):
+            print("Capturing style target " + str(i+1))
         for j in style_losses:
             j.mode = 'capture'
             j.blend_weight = style_blend_weights[i]
@@ -205,7 +210,7 @@ def main():
     img = nn.Parameter(img)
 
     def maybe_print(t, loss):
-        if params.print_iter > 0 and t % params.print_iter == 0:
+        if params.print_iter > 0 and t % params.print_iter == 0 and params.verbose ==1:
             print("Iteration " + str(t) + " / "+ str(params.num_iterations))
             for i, loss_module in enumerate(content_losses):
                 print("  Content " + str(i+1) + " loss: " + str(loss_module.loss.item()))
@@ -265,7 +270,8 @@ def main():
 # Configure the optimizer
 def setup_optimizer(img):
     if params.optimizer == 'lbfgs':
-        print("Running optimization with L-BFGS")
+        if(params.verbose == 1):
+            print("Running optimization with L-BFGS")
         optim_state = {
             'max_iter': params.num_iterations,
             'tolerance_change': -1,
@@ -276,8 +282,9 @@ def setup_optimizer(img):
         optimizer = optim.LBFGS([img], **optim_state)
         loopVal = 1
     elif params.optimizer == 'adam':
-        print("Running optimization with ADAM")
-        optimizer = optim.Adam([img], lr = params.learning_rate)
+        if(params.verbose == 1):
+            print("Running optimization with ADAM")
+        optimizer = optim.Adam([img], lr = params.learning_rate) 
         loopVal = params.num_iterations - 1
     return optimizer, loopVal
 
