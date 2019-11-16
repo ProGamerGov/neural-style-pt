@@ -12,8 +12,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     keywords='neural artistic style neural-style neural-style-pt pytorch style transfer style-transfer pytorch-style-transfer neuralart neural-art nst neural-style-transfer deepstyle deep-style mlart machine-learning-art aiart ai-art gatys justin-johnson torch deepdream',
-    #scripts=['neural_style/neural_style','neural_style/CaffeLoader'],
-	entry_points={
+    entry_points={
         'console_scripts': ["neural-style = neural_style.neural_style:main"],
     },
     url="https://github.com/ProGamerGov/neural-style-pt/tree/pip-master/",
