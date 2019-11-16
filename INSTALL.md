@@ -32,6 +32,8 @@ By default the models are downloaded to your home directory, but you can specify
 neural-style -download_models <download_path>
 ```
 
+If you run into an error with installing the PyTorch package on Windows, then you'll have to navigate to https://pytorch.org/ to get the working Windows download command for pip. After that you can install neural-style-pt normally via pip.
+
 # Ubuntu:
 
 ## With A Package Manager:
