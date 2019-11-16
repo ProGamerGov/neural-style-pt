@@ -5,7 +5,9 @@ This guide will walk you through multiple ways to setup `neural-style-pt` on Ubu
 Note that in order to reduce their size, the pre-packaged binary releases (pip, Conda, etc...) have removed support for some older GPUs, and thus you will have to install from source in order to use these GPUs.
 
 
-# pip:
+# All Operating Systems
+
+### pip:
 
 The neural-style-pt PyPI page can be found here: https://pypi.org/project/neural-style/
 
