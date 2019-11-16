@@ -193,28 +193,31 @@ vgg19_dict = {
 'P': ['pool1', 'pool2', 'pool3', 'pool4', 'pool5'],
 }
 
+name_dict = {
+'vgg19': ['vgg-19', 'vgg-19', 'vgg_19'],
+'vgg16': ['vgg-16', 'vgg16', 'vgg_16', 'fcn32s', 'pruning', 'sod'],
+}
+
 
 def modelSelector(model_file, pooling):
-    vgg_list = ["fcn32s", "pruning", "sod", "vgg"]
-    if any(name in model_file for name in vgg_list):
-        if "pruning" in model_file:
+    if "vgg" in model_name:
+        if any(name in model_file for name in name_dict['vgg16']):
             print("VGG-16 Architecture Detected")
-            print("Using The Channel Pruning Model")
-            cnn, layerList = VGG_PRUNED(buildSequential(channel_list['VGG-16p'], pooling)), vgg16_dict
-        elif "fcn32s" in model_file:
-            print("VGG-16 Architecture Detected")
-            print("Using the fcn32s-heavy-pascal Model")
-            cnn, layerList = VGG_FCN32S(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
-        elif "sod" in model_file:
-            print("VGG-16 Architecture Detected")
-            print("Using The SOD Fintune Model")
-            cnn, layerList = VGG_SOD(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
-        elif "19" in model_file:
+            if "pruning" in model_file:
+                print("Using The Channel Pruning Model")
+                cnn, layerList = VGG_PRUNED(buildSequential(channel_list['VGG-16p'], pooling)), vgg16_dict
+            elif "fcn32s" in model_file:
+                print("Using the fcn32s-heavy-pascal Model")
+                cnn, layerList = VGG_FCN32S(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
+            elif "sod" in model_file:
+                print("Using The SOD Fintune Model")
+                cnn, layerList = VGG_SOD(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
+            elif "16" in model_file:
+                cnn, layerList = VGG(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
+        elif any(name in model_file for name in name_dict['vgg19']):
             print("VGG-19 Architecture Detected")
-            cnn, layerList = VGG(buildSequential(channel_list['VGG-19'], pooling)), vgg19_dict
-        elif "16" in model_file:
-            print("VGG-16 Architecture Detected")
-            cnn, layerList = VGG(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
+            if "19" in model_file:
+                cnn, layerList = VGG(buildSequential(channel_list['VGG-19'], pooling)), vgg19_dict
         else:
             raise ValueError("VGG architecture not recognized.")
     elif "nin" in model_file:
