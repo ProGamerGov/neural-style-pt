@@ -197,10 +197,11 @@ name_dict = {
 'vgg19': ['vgg-19', 'vgg-19', 'vgg_19'],
 'vgg16': ['vgg-16', 'vgg16', 'vgg_16', 'fcn32s', 'pruning', 'sod'],
 }
+name_dict['vgg'] = name_dict['vgg19'] + name_dict['vgg16']
 
 
 def modelSelector(model_file, pooling):
-    if "vgg" in model_name:
+    if any(name in model_file for name in name_dict['vgg']):
         if any(name in model_file for name in name_dict['vgg16']):
             print("VGG-16 Architecture Detected")
             if "pruning" in model_file:
