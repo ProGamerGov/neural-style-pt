@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import absolute_import
 import os
 import copy
 import torch
@@ -7,7 +8,7 @@ import torch.optim as optim
 import torchvision.transforms as transforms
 
 from PIL import Image
-from loader.CaffeLoader import loadCaffemodel, ModelParallel
+from .loader.CaffeLoader import loadCaffemodel, ModelParallel
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -59,7 +60,7 @@ Image.MAX_IMAGE_PIXELS = 1000000000 # Support gigapixel images
 
 def main():
     if params.download_models:
-        from loader.CaffeLoader import downloadModels
+        from .loader.CaffeLoader import downloadModels
         downloadModels(params.download_models)
     if params.content_image == '':
         raise ValueError("You must select a content image.")
