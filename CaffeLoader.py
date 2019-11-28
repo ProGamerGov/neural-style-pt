@@ -154,7 +154,7 @@ class ModelParallel(nn.Module):
 class MultipleChoice(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         self.options = ['nn', 'cudnn', 'mkl', 'mkldnn', 'openmp']
-        e = [o for o in values.split(',') if o not in self.options]
+        e = [o.lower() for o in values.split(',') if o.lower() not in self.options]
         if len(e) > 0:
             raise argparse.ArgumentError(self, 'invalid choices: ' + ','.join([str(v) for v in e]) +  
                                          ' (choose from ' + ','.join([ "'"+str(v)+"'" for v in self.options])+')')
