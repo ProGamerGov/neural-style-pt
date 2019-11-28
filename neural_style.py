@@ -314,6 +314,7 @@ def setup_gpu():
         dtype, backward_device = torch.cuda.FloatTensor, "cuda:" + str(params.gpu)
     else:
         dtype, backward_device = torch.FloatTensor, "cpu"
+    params.backend = params.backend.lower()
     setup_cuda(), setup_cpu()
     return dtype, multidevice, backward_device
 
