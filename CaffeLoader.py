@@ -1,4 +1,5 @@
 import torch
+import argparse
 import torch.nn as nn
 
 
@@ -149,8 +150,19 @@ class ModelParallel(nn.Module):
                 input = chunk(input)
         return input
 
+    
+class MultipleChoice(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        self.options, e = ['nn', 'cudnn', 'mkl', 'mkldnn', 'openmp'], []
+        for o in values.split(','):
+            if o not in self.options:
+                e.append(o)
+        if len(e) > 0:
+            raise argparse.ArgumentError(self, 'invalid choices: ' + ','.join([str(v) for v in e]) +  
+                                         ' (choose from ' + ','.join([ "'"+str(v)+"'" for v in self.options])+')')
+        setattr(namespace, self.dest, values)
 
-
+        
 def buildSequential(channel_list, pooling):
     layers = []
     in_channels = 3
