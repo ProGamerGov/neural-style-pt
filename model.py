@@ -13,8 +13,10 @@ class StyleNet(torch.nn.Module):
         
     def __init__(self, params, dtype, multidevice, backward_device):
         super(StyleNet, self).__init__()
-
+        self.params = params
         self.content_seg = "this is temp"
+        self.content_masks_orig = None
+        self.style_masks_orig = None
         self.tv_weight, self.content_weight, self.style_weight = 1e-3, 5e0, 1e2
         self.dtype, self.multidevice, self.backward_device = dtype, multidevice, backward_device
         self.content_losses, self.style_losses, self.tv_losses = [], [], []
@@ -45,10 +47,10 @@ class StyleNet(torch.nn.Module):
 
                     if layerList['C'][c] in style_layers:
                         print("Setting up style layer " + str(i) + ": " + str(layerList['C'][c]))
-                        if self.content_seg != None:
-                            loss_module = MaskedStyleLoss(self.style_weight)
-                        else:
-                            loss_module = StyleLoss(self.style_weight)
+                        #if self.content_seg != None:
+                        loss_module = MaskedStyleLoss(self.style_weight)
+                        #else:
+                        #    loss_module = StyleLoss(self.style_weight)
                         net.add_module(str(len(net)), loss_module)
                         self.style_losses.append(loss_module)
                     
@@ -66,10 +68,10 @@ class StyleNet(torch.nn.Module):
 
                     if layerList['R'][r] in style_layers:
                         print("Setting up style layer " + str(i) + ": " + str(layerList['R'][r]))
-                        if self.content_seg != None:
-                            loss_module = MaskedStyleLoss(self.style_weight)
-                        else:
-                            loss_module = StyleLoss(self.style_weight)
+                        #if self.content_seg != None:
+                        loss_module = MaskedStyleLoss(self.style_weight)
+                        #else:
+                        #    loss_module = StyleLoss(self.style_weight)
                         net.add_module(str(len(net)), loss_module)
                         self.style_losses.append(loss_module)
                         next_style_idx += 1
@@ -88,15 +90,17 @@ class StyleNet(torch.nn.Module):
 
         # Setup multidevice
         if self.multidevice:
-            self.setup_multi_device(params.gpu, params.multidevice_strategy)
+            self.__setup_multi_device(params.gpu, params.multidevice_strategy)
 
-    def setup_multi_device(self, gpu, multidevice_strategy):
+
+    def __setup_multi_device(self, gpu, multidevice_strategy):
         from CaffeLoader import ModelParallel
         self.multidevice = True
         assert len(gpu.split(',')) - 1 == len(multidevice_strategy.split(',')), \
             "The number of -multidevice_strategy layer indices minus 1, must be equal to the number of -gpu devices."
         self.net = ModelParallel(self.net, gpu, multidevice_strategy)
         
+
     def set_content_weight(self, content_weight):
         if self.content_weight == content_weight:
             return
@@ -105,6 +109,7 @@ class StyleNet(torch.nn.Module):
             if isinstance(layer, ContentLoss):
                 layer.weight = self.content_weight
 
+
     def set_style_weight(self, style_weight):
         if self.style_weight == style_weight:
             return
@@ -112,9 +117,10 @@ class StyleNet(torch.nn.Module):
         for layer in self.net:
             if isinstance(layer, MaskedStyleLoss):
                 layer.weight = self.style_weight
-            elif isinstance(layer, StyleLoss):
-                layer.weight = self.style_weight
+            #elif isinstance(layer, StyleLoss):
+            #    layer.weight = self.style_weight
         
+
     def set_tv_weight(self, tv_weight):
         if self.tv_weight == tv_weight:
             return
@@ -123,45 +129,81 @@ class StyleNet(torch.nn.Module):
             if isinstance(layer, TVLoss):
                 layer.weight = self.tv_weight
  
-    def setup_masks(self, content_masks, style_masks):
-        self.content_masks, self.style_masks = copy.deepcopy(content_masks), copy.deepcopy(style_masks)
-        self.num_styles = len(self.style_masks)
+
+    def capture(self, content_image, style_images, style_blend_weights=None, content_masks=None, style_masks=None):
+        style_images = [style_images] if type(style_images) != list else style_images
+        self.content_masks = copy.deepcopy(content_masks)
+        self.style_masks = copy.deepcopy(style_masks)
+        self.num_styles = len(style_images)
+        self.__setup_style_masks(style_images)
+        self.__setup_layer_masks()
+        self.__capture_content(content_image)         
+        self.__capture_style(style_images, style_blend_weights)         
+
+
+    def __setup_style_masks(self, style_images):            
+        if self.style_masks == None:
+            self.style_masks  = [torch.ones(style_images[i].shape).type(self.dtype) 
+                                 for i in range(self.num_styles)]
+        style_masks = []
+        for i in range(self.num_styles):
+            tmp_table = []
+            for j in range(self.num_styles):
+                style_seg_image = self.style_masks[i][0][0]
+                if i == j:
+                    style_mask_i_j = style_seg_image.type(self.dtype)
+                else:                
+                    style_mask_i_j = torch.zeros(style_seg_image.shape).type(self.dtype)
+                tmp_table.append(style_mask_i_j)
+            style_masks.append(tmp_table)
+        self.style_masks = style_masks
+
+
+    def __setup_layer_masks(self):
         for layer in self.net:
             if isinstance(layer, nn.MaxPool2d) or isinstance(layer, nn.AvgPool2d):
-                for k in range(self.num_styles):
-                    h, w = self.content_masks[k].shape
-                    h, w = int(h/2), int(w/2)
-                    self.content_masks[k] = torch.nn.functional.interpolate(
-                        self.content_masks[k].repeat(1,1,1,1), mode='bilinear', size=(h, w))[0][0]
-                for j in range(self.num_styles):
+                if self.content_masks != None:
                     for k in range(self.num_styles):
-                        h, w = self.style_masks[j][k].shape
+                        h, w = self.content_masks[k].shape
                         h, w = int(h/2), int(w/2)
-                        self.style_masks[j][k] = torch.nn.functional.interpolate(
-                            self.style_masks[j][k].repeat(1,1,1,1), mode='bilinear', size=(h, w))[0][0]
-                    self.style_masks[j] = copy.deepcopy(self.style_masks[j])
+                        self.content_masks[k] = torch.nn.functional.interpolate(
+                            self.content_masks[k].repeat(1,1,1,1), mode='bilinear', size=(h, w))[0][0]
+                if self.style_masks != None:
+                    for j in range(self.num_styles):
+                        for k in range(self.num_styles):
+                            h, w = self.style_masks[j][k].shape
+                            h, w = int(h/2), int(w/2)
+                            self.style_masks[j][k] = torch.nn.functional.interpolate(
+                                self.style_masks[j][k].repeat(1,1,1,1), mode='bilinear', size=(h, w))[0][0]
+                        self.style_masks[j] = copy.deepcopy(self.style_masks[j])
 
             elif isinstance(layer, nn.Conv2d):
                 sap = nn.AvgPool2d(kernel_size=(3,3), stride=(1, 1), padding=(1,1))
-                for k in range(self.num_styles):
-                    self.content_masks[k] = sap(self.content_masks[k].repeat(1,1,1))[0].clone()
-                for j in range(self.num_styles):
+                if self.content_masks != None:
                     for k in range(self.num_styles):
-                        self.style_masks[j][k] = sap(self.style_masks[j][k].repeat(1,1,1))[0].clone()
-                    self.style_masks[j] = copy.deepcopy(self.style_masks[j])
+                        self.content_masks[k] = sap(self.content_masks[k].repeat(1,1,1))[0].clone()
+                if self.style_masks != None:
+                    for j in range(self.num_styles):
+                        for k in range(self.num_styles):
+                            self.style_masks[j][k] = sap(self.style_masks[j][k].repeat(1,1,1))[0].clone()
+                        self.style_masks[j] = copy.deepcopy(self.style_masks[j])
 
             if isinstance(layer, MaskedStyleLoss):
                 layer.set_masks(self.content_masks, self.style_masks)
-                                
-    def capture_content(self, content_image):
+
+
+    def __capture_content(self, content_image):
         for l in self.content_losses:
             l.mode = 'capture'
         for l in self.style_losses:
             l.mode = 'none'
         print("Capturing content targets")
-        self.forward(content_image, loss_mode=False)
+        self.forward(content_image.type(self.dtype), loss_mode=False)
 
-    def capture_style(self, style_images, style_blend_weights):
+
+    def __capture_style(self, style_images, style_blend_weights):
+        if style_blend_weights == None:
+            style_blend_weights = [1.0 / len(style_images) for image in style_images]
         for l in self.content_losses:
             l.mode = 'none'
         for l in self.style_losses:
@@ -170,16 +212,18 @@ class StyleNet(torch.nn.Module):
             print("Capturing style target " + str(i+1))
             for l in self.style_losses:
                 l.blend_weight = style_blend_weights[i]
-            self.forward(style_image, loss_mode=False)
+            self.forward(style_image.type(self.dtype), loss_mode=False)
+
 
     def forward(self, x, loss_mode=True):
-        if loss_mode == True:
+        if loss_mode:
             for l in self.content_losses:
                 l.mode = 'loss'
             for l in self.style_losses:
                 l.mode = 'loss'
         self.net(x)
         
+
     def get_loss(self):
         loss = 0
         for mod in self.content_losses:
@@ -216,35 +260,35 @@ class ContentLoss(nn.Module):
 ######################################################
 # Stlye Loss module (no masks)
 
-class StyleLoss(nn.Module):
+# class StyleLoss(nn.Module):
 
-    def __init__(self, strength):
-        super(StyleLoss, self).__init__()
-        self.target = torch.Tensor()
-        self.strength = strength
-        #self.gram = GramMatrix()
-        self.crit = nn.MSELoss()
-        self.mode = 'none'
-        self.blend_weight = None
+#     def __init__(self, strength):
+#         super(StyleLoss, self).__init__()
+#         self.target = torch.Tensor()
+#         self.strength = strength
+#         #self.gram = GramMatrix()
+#         self.crit = nn.MSELoss()
+#         self.mode = 'none'
+#         self.blend_weight = None
 
-    def forward(self, input):
-        self.G = self.gram(input)
-        self.G = self.G.div(input.nelement())
-        if self.mode == 'capture':
-            if self.blend_weight == None:
-                self.target = self.G.detach()
-            elif self.target.nelement() == 0:
-                self.target = self.G.detach().mul(self.blend_weight)
-            else:
-                self.target = self.target.add(self.blend_weight, self.G.detach())
-        elif self.mode == 'loss':
-            self.loss = self.strength * self.crit(self.G, self.target)
-        return input
+#     def forward(self, input):
+#         self.G = self.gram(input)
+#         self.G = self.G.div(input.nelement())
+#         if self.mode == 'capture':
+#             if self.blend_weight == None:
+#                 self.target = self.G.detach()
+#             elif self.target.nelement() == 0:
+#                 self.target = self.G.detach().mul(self.blend_weight)
+#             else:
+#                 self.target = self.target.add(self.blend_weight, self.G.detach())
+#         elif self.mode == 'loss':
+#             self.loss = self.strength * self.crit(self.G, self.target)
+#         return input
 
-    def gram(self, input):
-        B, C, H, W = input.size()
-        x_flat = input.view(C, H * W)
-        return torch.mm(x_flat, x_flat.t())
+#     def gram(self, input):
+#         _, C, H, W = input.size()
+#         x_flat = input.view(C, H * W)
+#         return torch.mm(x_flat, x_flat.t())
 
 
 
@@ -261,33 +305,44 @@ class MaskedStyleLoss(nn.Module):
         self.crit = nn.MSELoss()
         self.mode = 'none'
         self.blend_weight = None
-        
+        self.set_masks(None, None)        
+
     def set_masks(self, content_masks, style_masks):
         self.content_masks = copy.deepcopy(content_masks)
         self.style_masks = copy.deepcopy(style_masks)
         self.target_grams = []
         self.masked_grams = []
         self.masked_features = []
-        self.num_styles = len(self.style_masks)
         self.capture_count = 0
+        #self.num_styles = len(self.style_masks)
 
     def forward(self, input):
         if self.mode == 'capture':
-            masks = self.style_masks[self.capture_count]
+            if self.style_masks != None:
+                masks = self.style_masks[self.capture_count]
+            else:
+                masks = None
             self.capture_count += 1
         elif self.mode == 'loss':
             masks = self.content_masks
             self.style_masks = None
         if self.mode != 'none':
             loss = 0
-            for j in range(self.num_styles):
-                l_mask_ori = masks[j].clone()
-                l_mask = l_mask_ori.repeat(1,1,1).expand(input.size())
-                l_mean = l_mask_ori.mean()
-                masked_feature = l_mask.mul(input)
-                masked_gram = self.gram(masked_feature).clone()
-                if l_mean > 0:
-                    masked_gram = masked_gram.div(input.nelement() * l_mean)
+            for j in range(self.capture_count):
+            #for j in range(self.num_styles):
+                if masks != None:
+                    l_mask_ori = masks[j].clone()
+                    l_mask = l_mask_ori.repeat(1,1,1).expand(input.size())
+                    l_mean = l_mask_ori.mean()
+                    masked_feature = l_mask.mul(input)
+                    masked_gram = self.gram(masked_feature).clone()
+                    if l_mean > 0:
+                        masked_gram = masked_gram.div(input.nelement() * l_mean)
+                else:
+                    l_mean = 1.0
+                    masked_feature = input
+                    masked_gram = self.gram(input).clone()
+                    masked_gram = masked_gram.div(input.nelement())
                 if self.mode == 'capture':
                     if j >= len(self.target_grams):
                         self.target_grams.append(masked_gram.detach().mul(self.blend_weight))
@@ -303,7 +358,7 @@ class MaskedStyleLoss(nn.Module):
         return input
 
     def gram(self, input):
-        B, C, H, W = input.size()
+        _, C, H, W = input.size()
         x_flat = input.view(C, H * W)
         return torch.mm(x_flat, x_flat.t())
 
