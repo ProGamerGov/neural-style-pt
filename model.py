@@ -107,7 +107,7 @@ class StyleNet(torch.nn.Module):
         self.content_weight = content_weight
         for layer in self.net:
             if isinstance(layer, ContentLoss):
-                layer.weight = self.content_weight
+                layer.strength = self.content_weight
 
 
     def set_style_weight(self, style_weight):
@@ -116,9 +116,9 @@ class StyleNet(torch.nn.Module):
         self.style_weight = style_weight
         for layer in self.net:
             if isinstance(layer, MaskedStyleLoss):
-                layer.weight = self.style_weight
+                layer.strength = self.style_weight
             #elif isinstance(layer, StyleLoss):
-            #    layer.weight = self.style_weight
+            #    layer.strength = self.style_weight
         
 
     def set_tv_weight(self, tv_weight):
@@ -127,7 +127,7 @@ class StyleNet(torch.nn.Module):
         self.tv_weight = tv_weight
         for layer in self.net:
             if isinstance(layer, TVLoss):
-                layer.weight = self.tv_weight
+                layer.strength = self.tv_weight
  
 
     def capture(self, content_image, style_images, style_blend_weights=None, content_masks=None, style_masks=None):
@@ -135,13 +135,13 @@ class StyleNet(torch.nn.Module):
         self.content_masks = copy.deepcopy(content_masks)
         self.style_masks = copy.deepcopy(style_masks)
         self.num_styles = len(style_images)
-        self.__setup_style_masks(style_images)
-        self.__setup_layer_masks()
-        self.__capture_content(content_image)         
-        self.__capture_style(style_images, style_blend_weights)         
+        self.__setup_style_masks__(style_images)
+        self.__setup_layer_masks__()
+        self.__capture_content__(content_image.type(self.dtype))
+        self.__capture_style__(style_images, style_blend_weights)         
 
 
-    def __setup_style_masks(self, style_images):            
+    def __setup_style_masks__(self, style_images):            
         if self.style_masks == None:
             self.style_masks  = [torch.ones(style_images[i].shape).type(self.dtype) 
                                  for i in range(self.num_styles)]
@@ -159,7 +159,11 @@ class StyleNet(torch.nn.Module):
         self.style_masks = style_masks
 
 
-    def __setup_layer_masks(self):
+    def __setup_layer_masks__(self):
+        if self.content_masks is not None:
+            for c, content_mask in enumerate(self.content_masks):
+                self.content_masks[c] = torch.mean(content_mask.type(self.dtype), axis=1)[0]
+
         for layer in self.net:
             if isinstance(layer, nn.MaxPool2d) or isinstance(layer, nn.AvgPool2d):
                 if self.content_masks != None:
@@ -192,7 +196,7 @@ class StyleNet(torch.nn.Module):
                 layer.set_masks(self.content_masks, self.style_masks)
 
 
-    def __capture_content(self, content_image):
+    def __capture_content__(self, content_image):
         for l in self.content_losses:
             l.mode = 'capture'
         for l in self.style_losses:
@@ -201,7 +205,7 @@ class StyleNet(torch.nn.Module):
         self.forward(content_image.type(self.dtype), loss_mode=False)
 
 
-    def __capture_style(self, style_images, style_blend_weights):
+    def __capture_style__(self, style_images, style_blend_weights):
         if style_blend_weights == None:
             style_blend_weights = [1.0 / len(style_images) for image in style_images]
         for l in self.content_losses:
@@ -258,38 +262,23 @@ class ContentLoss(nn.Module):
 
 
 ######################################################
-# Stlye Loss module (no masks)
+# Modules for style loss
 
-# class StyleLoss(nn.Module):
+class GramMatrix(nn.Module):
 
-#     def __init__(self, strength):
-#         super(StyleLoss, self).__init__()
-#         self.target = torch.Tensor()
-#         self.strength = strength
-#         #self.gram = GramMatrix()
-#         self.crit = nn.MSELoss()
-#         self.mode = 'none'
-#         self.blend_weight = None
+    def forward(self, input):
+        _, C, H, W = input.size()
+        x_flat = input.view(C, H * W)
+        return torch.mm(x_flat, x_flat.t())
 
-#     def forward(self, input):
-#         self.G = self.gram(input)
-#         self.G = self.G.div(input.nelement())
-#         if self.mode == 'capture':
-#             if self.blend_weight == None:
-#                 self.target = self.G.detach()
-#             elif self.target.nelement() == 0:
-#                 self.target = self.G.detach().mul(self.blend_weight)
-#             else:
-#                 self.target = self.target.add(self.blend_weight, self.G.detach())
-#         elif self.mode == 'loss':
-#             self.loss = self.strength * self.crit(self.G, self.target)
-#         return input
 
-#     def gram(self, input):
-#         _, C, H, W = input.size()
-#         x_flat = input.view(C, H * W)
-#         return torch.mm(x_flat, x_flat.t())
+class CovarianceMatrix(nn.Module):
 
+    def forward(self, input):
+        _, C, H, W = input.size()
+        x_flat = input.view(C, H * W)
+        x_flat = x_flat - x_flat.mean(1).unsqueeze(1)
+        return torch.mm(x_flat, x_flat.t())
 
 
 
@@ -301,7 +290,7 @@ class MaskedStyleLoss(nn.Module):
     def __init__(self, strength):
         super(MaskedStyleLoss, self).__init__()
         self.strength = strength
-        #self.gram = GramMatrix()
+        self.gram = GramMatrix()
         self.crit = nn.MSELoss()
         self.mode = 'none'
         self.blend_weight = None
@@ -357,10 +346,6 @@ class MaskedStyleLoss(nn.Module):
             self.loss = loss
         return input
 
-    def gram(self, input):
-        _, C, H, W = input.size()
-        x_flat = input.view(C, H * W)
-        return torch.mm(x_flat, x_flat.t())
 
 
 ######################################################
@@ -377,15 +362,6 @@ class TVLoss(nn.Module):
         self.y_diff = input[:,:,:,1:] - input[:,:,:,:-1]
         self.loss = self.strength * (torch.sum(torch.abs(self.x_diff)) + torch.sum(torch.abs(self.y_diff)))
         return input
-
-
-
-# class GramMatrix(nn.Module):
-
-#     def forward(self, input):
-#         B, C, H, W = input.size()
-#         x_flat = input.view(C, H * W)
-#         return torch.mm(x_flat, x_flat.t())
 
 
 

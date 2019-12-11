@@ -2,6 +2,8 @@ import os
 import torch
 import torchvision.transforms as transforms
 from PIL import Image
+from IPython.display import clear_output
+from decimal import Decimal
 
 Image.MAX_IMAGE_PIXELS = 1000000000 # Support gigapixel images
 
@@ -20,6 +22,23 @@ class StylenetArgs:
         self.content_layers = 'relu4_2'
         self.style_layers = 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1'
         self.multidevice_strategy = '4,7,29'
+
+
+
+
+def load_image(path, image_size, to_normalize=True):
+    image = preprocess(path, image_size, to_normalize)
+    return image
+
+
+def random_image(h, w, c=3):
+    image = torch.randn(c, h, w).mul(0.001).unsqueeze(0)
+    return image
+
+
+def random_image_like(base_image):
+    _, C, H, W = base_image.size()
+    return random_image(H, W, C)
 
 
 # Preprocess an image before passing it to a model.
@@ -63,7 +82,7 @@ def get_style_image_paths(style_image_input):
     style_image_list = []
     for path in style_image_input:
         if os.path.isdir(path):
-            images = (image + "/" + file for file in os.listdir(image) 
+            images = (os.path.join(path, file) for file in os.listdir(path) 
                       if os.path.splitext(file)[1].lower() in [".jpg", ".jpeg", ".png", ".tiff"])
             style_image_list.extend(images)
         else:
@@ -72,15 +91,14 @@ def get_style_image_paths(style_image_input):
 
 
 def maybe_print(net, t, print_iter, num_iterations, loss):
-    if print_iter > 0 and t % print_iter == 0:
-        print("Iteration " + str(t) + " / "+ str(num_iterations))
-        for i, loss_module in enumerate(net.content_losses):
-            print("  Content " + str(i+1) + " loss: " + str(loss_module.loss.item()))
-        for i, loss_module in enumerate(net.style_losses):
-            print("  Style " + str(i+1) + " loss: " + str(loss_module.loss.item()))
-        print("  Total loss: " + str(loss.item()))
-
-
+    if print_iter != None and t % print_iter == 0:
+        clear_output()
+        print('Iteration %d/%d: '%(t, num_iterations))
+        print('  Content loss = %s' % ', '.join(['%.1e' % Decimal(module.loss.item()) for module in net.content_losses]))
+        print('  Style loss = %s' % ', '.join(['%.1e' % Decimal(module.loss.item()) for module in net.style_losses]))
+        print('  TV loss = %s' % ', '.join(['%.1e' % Decimal(module.loss.item()) for module in net.tv_losses]))
+        print('  Total loss = %.2e' % Decimal(loss.item()))
+        
 def maybe_save(img, t, save_iter, num_iterations, orig_colors, output_path):
     should_save = save_iter > 0 and t % save_iter == 0
     should_save = should_save or t == num_iterations
@@ -96,4 +114,4 @@ def maybe_save(img, t, save_iter, num_iterations, orig_colors, output_path):
         disp = original_colors(deprocess(content_image.clone()), disp)  ## this doesn't work yet
     disp.save(str(filename))
 
-    
+# original_colors won't work yet...
