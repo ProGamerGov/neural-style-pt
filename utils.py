@@ -21,9 +21,8 @@ class StylenetArgs:
         self.cudnn_autotune = False
         self.content_layers = 'relu4_2'
         self.style_layers = 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1'
+        self.hist_layers = 'relu2_1,relu3_1,relu4_1,relu5_1'
         self.multidevice_strategy = '4,7,29'
-
-
 
 
 def load_image(path, image_size, to_normalize=True):
@@ -94,9 +93,14 @@ def maybe_print(net, t, print_iter, num_iterations, loss):
     if print_iter != None and t % print_iter == 0:
         clear_output()
         print('Iteration %d/%d: '%(t, num_iterations))
-        print('  Content loss = %s' % ', '.join(['%.1e' % Decimal(module.loss.item()) for module in net.content_losses]))
-        print('  Style loss = %s' % ', '.join(['%.1e' % Decimal(module.loss.item()) for module in net.style_losses]))
-        print('  TV loss = %s' % ', '.join(['%.1e' % Decimal(module.loss.item()) for module in net.tv_losses]))
+        if net.content_weight > 0:
+            print('  Content loss = %s' % ', '.join(['%.1e' % Decimal(module.loss.item()) for module in net.content_losses]))
+        if net.style_weight > 0:
+            print('  Style loss = %s' % ', '.join(['%.1e' % Decimal(module.loss.item()) for module in net.style_losses]))
+        if net.hist_weight > 0:
+            print('  Histogram loss = %s' % ', '.join(['%.1e' % Decimal(module.loss.item()) for module in net.hist_losses]))
+        if net.tv_weight > 0:
+            print('  TV loss = %s' % ', '.join(['%.1e' % Decimal(module.loss.item()) for module in net.tv_losses]))
         print('  Total loss = %.2e' % Decimal(loss.item()))
         
 def maybe_save(img, t, save_iter, num_iterations, orig_colors, output_path):
