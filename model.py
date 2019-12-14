@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.optim as optim
 from CaffeLoader import loadCaffemodel
 
-cpp = torch.utils.cpp_extension.load(name="histogram_cpp", sources=["histogram.cpp", "histogram.cu"])
+cpp = torch.utils.cpp_extension.load(name="histogram", sources=["histogram.cpp", "histogram.cu"])
 
 ######################################################
 # StyleNet model
