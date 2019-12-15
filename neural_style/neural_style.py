@@ -70,6 +70,8 @@ def main():
     dtype, multidevice, backward_device = setup_gpu()
 
     cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu, params.disable_check)
+    
+    check_layers(params.content_layers, params.style_layers, layerList['R'])
 
     content_image = preprocess(params.content_image, params.image_size).type(dtype)
     style_image_input = params.style_image.split(',')
@@ -340,6 +342,16 @@ def setup_multi_device(net):
     new_net = ModelParallel(net, params.gpu, params.multidevice_strategy)
     return new_net
 
+
+def check_layers(content_layers, style_layers, acceptable_layers):
+    def check(layers, layer_type):
+        e = [o.lower() for o in layers.split(',') if o.lower() not in acceptable_layers]
+        if len(e) > 0:
+            raise ValueError('invalid ' + layer_type +' choice(s): ' + ','.join([str(v) for v in e]) +  
+                                         ' (choose one or more of ' + ','.join([ "'"+str(v)+"'" for v in acceptable_layers])+')')
+    check(content_layers, 'content layer')
+    check(style_layers, 'style layer')  
+           
 
 # Preprocess an image before passing it to a model.
 # We need to rescale from [0, 1] to [0, 255], convert from RGB to BGR,
