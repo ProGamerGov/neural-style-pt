@@ -95,10 +95,8 @@ def maybe_print(net, t, print_iter, num_iterations, loss):
         print('Iteration %d/%d: '%(t, num_iterations))
         if net.content_weight > 0:
             print('  Content loss = %s' % ', '.join(['%.1e' % Decimal(module.loss.item()) for module in net.content_losses]))
-        if net.style_weight > 0:
-            print('  Style loss = %s' % ', '.join(['%.1e' % Decimal(module.loss.item()) for module in net.style_losses]))
-        if net.hist_weight > 0:
-            print('  Histogram loss = %s' % ', '.join(['%.1e' % Decimal(module.loss.item()) for module in net.hist_losses]))
+        print('  Style loss = %s' % ', '.join(['%.1e' % Decimal(module.loss.item()) for module in net.style_losses if module.strength > 0]))
+        print('  Histogram loss = %s' % ', '.join(['%.1e' % Decimal(module.loss.item()) for module in net.hist_losses if module.strength > 0]))
         if net.tv_weight > 0:
             print('  TV loss = %s' % ', '.join(['%.1e' % Decimal(module.loss.item()) for module in net.tv_losses]))
         print('  Total loss = %.2e' % Decimal(loss.item()))

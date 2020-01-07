@@ -17,7 +17,7 @@ class StyleNet(torch.nn.Module):
         self.params = params
         self.content_masks_orig = None
         self.style_masks_orig = None
-        self.tv_weight, self.content_weight, self.style_weight, self.hist_weight = 1e-3, 5e0, 1e2, 0
+        self.tv_weight, self.content_weight, self.style_weight, self.hist_weight, self.style_stat = 1e-3, 5e0, 1e2, 0, 'gram'
         self.dtype, self.multidevice, self.backward_device = dtype, multidevice, backward_device
         self.content_losses, self.style_losses, self.hist_losses, self.tv_losses = [], [], [], []
 
@@ -113,6 +113,17 @@ class StyleNet(torch.nn.Module):
                 layer.strength = self.content_weight
 
 
+    def set_style_layer(self, idx_layer, style_stat, style_weight):
+        style_layers = [layer for layer in self.net if isinstance(layer, MaskedStyleLoss)]
+        style_layers[idx_layer].strength = style_weight
+        style_layers[idx_layer].set_statistic(style_stat)
+
+
+    def set_hist_layer(self, idx_layer, hist_weight):
+        hist_layers = [layer for layer in self.net if isinstance(layer, MaskedHistLoss)]
+        hist_layers[idx_layer].strength = hist_weight
+
+
     def set_style_weight(self, style_weight):
         if self.style_weight == style_weight:
             return
@@ -141,10 +152,29 @@ class StyleNet(torch.nn.Module):
  
 
     def set_style_statistic(self, style_stat):
+        if self.style_stat == style_stat:
+            return
+        self.style_stat = style_stat
         for layer in self.net:
             if isinstance(layer, MaskedStyleLoss):
-                layer.set_statistic(style_stat)
-        
+                layer.set_statistic(self.style_stat)
+
+
+    def get_content_weight(self):
+        return self.content_weight
+    
+    def get_style_weight(self):
+        return self.style_weight
+    
+    def get_hist_weight(self):
+        return self.hist_weight
+    
+    def get_tv_weight(self):
+        return self.tv_weight
+    
+    def get_style_statistic(self):
+        return self.style_stat
+
 
     def capture(self, content_image, style_images, style_blend_weights=None, content_masks=None, style_masks=None):
         style_images = [style_images] if type(style_images) != list else style_images
@@ -255,11 +285,11 @@ class StyleNet(torch.nn.Module):
         if self.content_weight > 0:
             for mod in self.content_losses:
                 loss += mod.loss.to(self.backward_device)
-        if self.style_weight > 0:
-            for mod in self.style_losses:
+        for mod in self.style_losses:
+            if mod.strength > 0:
                 loss += mod.loss.to(self.backward_device)
-        if self.hist_weight > 0:
-            for mod in self.hist_losses:
+        for mod in self.hist_losses:
+            if mod.strength > 0:
                 loss += mod.loss.to(self.backward_device)
         if self.tv_weight > 0:
             for mod in self.tv_losses:
@@ -306,6 +336,79 @@ class CovarianceMatrix(nn.Module):
         x_flat = input.view(C, H * W)
         x_flat = x_flat - x_flat.mean(1).unsqueeze(1)
         return torch.mm(x_flat, x_flat.t())
+
+
+######################################################
+# Histogram matching function (unused at the moment)
+
+# Define a module to match histograms
+class MatchHistogram(nn.Module):
+    def __init__(self, eps=1e-5, mode='pca'):
+        super(MatchHistogram, self).__init__()
+        self.eps = eps or 1e-5
+        self.mode = mode or 'pca'
+        self.dim_val = 3
+                
+    def get_histogram(self, tensor):
+        m = tensor.mean(0).mean(0)
+        h = (tensor - m).permute(2,0,1).reshape(tensor.size(2),-1)     
+        if h.is_cuda:
+            ch = torch.mm(h, h.T) / h.shape[1] + self.eps * torch.eye(h.shape[0], device=h.get_device())
+        else:
+            ch = torch.mm(h, h.T) / h.shape[1] + self.eps * torch.eye(h.shape[0])        
+        return m, h, ch
+        
+    def convert_tensor(self, tensor):
+        if tensor.dim() == 4:
+            tensor = tensor.squeeze(0).permute(2, 1, 0)
+            self.dim_val = 4
+        elif tensor.dim() == 3 and self.dim_val != 4:       
+            tensor = tensor.permute(2, 1, 0)        
+        elif tensor.dim() == 3 and self.dim_val == 4:
+            tensor = tensor.permute(2, 1, 0).unsqueeze(0)
+        return tensor
+
+    def nan2zero(self, tensor):
+        tensor[tensor != tensor] = 0
+        return tensor
+
+    def chol(self, t, c, s):
+        chol_t, chol_s = torch.cholesky(c), torch.cholesky(s)
+        return torch.mm(torch.mm(chol_s, torch.inverse(chol_t)), t)
+
+    def sym(self, t, c, s):         
+        p = self.pca(t, c)    
+        psp = torch.mm(torch.mm(p, s), p)   
+        eval_psp, evec_psp = torch.symeig(psp, eigenvectors=True, upper=True)
+        e = self.nan2zero(torch.sqrt(torch.diagflat(eval_psp)))        
+        evec_mm = torch.mm(torch.mm(evec_psp, e), evec_psp.T)
+        return torch.mm(torch.mm(torch.mm(torch.inverse(p), evec_mm), torch.inverse(p)), t)
+    
+    def pca(self, t, c): 
+        eval_t, evec_t = torch.symeig(c, eigenvectors=True, upper=True)
+        e = self.nan2zero(torch.sqrt(torch.diagflat(eval_t)))
+        return torch.mm(torch.mm(evec_t, e), evec_t.T)
+
+    def match(self, target_tensor, source_tensor):               
+        source_tensor = self.convert_tensor(source_tensor)   
+        target_tensor = self.convert_tensor(target_tensor)      
+
+        _, t, ct = self.get_histogram(target_tensor) 
+        ms, s, cs = self.get_histogram(source_tensor) 
+    
+        if self.mode == 'pca':
+            mt = torch.mm(torch.mm(self.pca(s, cs), torch.inverse(self.pca(t, ct))), t)
+        elif self.mode == 'sym':
+            mt = self.sym(t, ct, cs)
+        elif self.mode == 'chol':
+            mt = self.chol(t, ct, cs)
+        
+        matched_tensor = mt.reshape(*target_tensor.permute(2,0,1).shape).permute(1,2,0)
+        matched_tensor += ms  
+        return self.convert_tensor(matched_tensor)
+        
+    def forward(self, input, source_tensor):     
+        return self.match(input, source_tensor)
 
 
 
@@ -385,7 +488,7 @@ class MaskedStyleLoss(nn.Module):
 ######################################################
 # Style Loss module (histogram loss with masks)
 
-class MaskedHistLoss(nn.Module):
+class MaskedHistLoss_old(nn.Module):
 
     def __init__(self, strength):
         super(MaskedHistLoss, self).__init__()
@@ -451,6 +554,61 @@ class MaskedHistLoss(nn.Module):
                 elif self.mode == 'loss':
                     target = self.calcHist(masked_feature[0], self.target_hists[j], self.target_mins[j], self.target_maxs[j])
                     loss += 0.01 * self.strength * self.crit(masked_feature, target)
+            self.loss = loss
+        return input
+
+
+
+class MaskedHistLoss(nn.Module):
+
+    def __init__(self, strength):
+        super(MaskedHistLoss, self).__init__()
+        self.strength = strength
+        self.crit = nn.MSELoss()
+        self.mode = 'none'
+        self.blend_weight = 1.0
+        self.set_masks(None, None)
+
+    def double_mean(self, tensor):
+        tensor = tensor.squeeze(0).permute(2, 1, 0)
+        return tensor.mean(0).mean(0)
+
+    def set_masks(self, content_masks, style_masks):
+        self.content_masks = copy.deepcopy(content_masks)
+        self.style_masks = copy.deepcopy(style_masks)
+        self.targets = []
+        self.capture_count = 0
+		
+    def forward(self, input):
+        if self.mode == 'capture':
+            if self.style_masks != None:
+                masks = self.style_masks[self.capture_count]
+            else:
+                masks = None
+            self.capture_count += 1
+        elif self.mode == 'loss':
+            masks = self.content_masks
+            self.style_masks = None
+        if self.mode != 'none':
+            if self.strength == 0:
+                self.loss = 0
+                return input  
+            loss = 0
+            for j in range(self.capture_count):
+                if masks != None:
+                    l_mask_ori = masks[j].clone()
+                    l_mask = l_mask_ori.repeat(1,1,1).expand(input.size())
+                    masked_feature = l_mask.mul(input)
+                else:
+                    masked_feature = input
+                if self.mode == 'capture':		
+                    target = self.double_mean(masked_feature.detach())      
+                    if j >= len(self.targets):
+                        self.targets.append(target.mul(self.blend_weight))
+                    else:
+                        self.targets[j] += target.mul(self.blend_weight)
+                elif self.mode == 'loss':
+                    loss += self.strength * self.crit(self.double_mean(masked_feature.clone()), self.targets[j])
             self.loss = loss
         return input
 
