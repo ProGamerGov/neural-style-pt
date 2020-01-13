@@ -200,6 +200,7 @@ path or a full absolute path.
 * `-output_image`: Name of the output image. Default is `out.png`.
 * `-print_iter`: Print progress every `print_iter` iterations. Set to 0 to disable printing.
 * `-save_iter`: Save the image every `save_iter` iterations. Set to 0 to disable saving intermediate results.
+* `-log_level`: Print information at this level or above. 10 by default for DEBUG, 20 for INFO, 30 for WARNING, 40 for ERROR and 50 for CRITICAL. The scripts currently only have INFO level outputs, so practical usage is 30 for quiet mode and leave it off for the default output.
 
 **Layer options**:
 * `-content_layers`: Comma-separated list of layer names to use for content reconstruction.
