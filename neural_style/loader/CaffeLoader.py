@@ -272,13 +272,13 @@ def downloadModels(download_path):
         download_path = os.path.expanduser("~")
 
     # Download the VGG-19 model and fix the layer names
-    sd = load_url("https://s3-us-west-2.amazonaws.com/jcjohns-models/vgg19-d01eb7cb.pth")
+    sd = load_url("https://web.eecs.umich.edu/~justincj/models/vgg19-d01eb7cb.pth")
     map = {'classifier.1.weight':u'classifier.0.weight', 'classifier.1.bias':u'classifier.0.bias', 'classifier.4.weight':u'classifier.3.weight', 'classifier.4.bias':u'classifier.3.bias'}
     sd = OrderedDict([(map[k] if k in map else k,v) for k,v in sd.items()])
     torch.save(sd, os.path.join(download_path, "vgg19-d01eb7cb.pth"))
 
     # Download the VGG-16 model and fix the layer names
-    sd = load_url("https://s3-us-west-2.amazonaws.com/jcjohns-models/vgg16-00b39a1b.pth")
+    sd = load_url("https://web.eecs.umich.edu/~justincj/models/vgg16-00b39a1b.pth")
     map = {'classifier.1.weight':u'classifier.0.weight', 'classifier.1.bias':u'classifier.0.bias', 'classifier.4.weight':u'classifier.3.weight', 'classifier.4.bias':u'classifier.3.bias'}
     sd = OrderedDict([(map[k] if k in map else k,v) for k,v in sd.items()])
     torch.save(sd, os.path.join(download_path, "vgg16-00b39a1b.pth"))
