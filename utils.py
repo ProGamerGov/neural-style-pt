@@ -40,6 +40,12 @@ def random_image_like(base_image):
     return random_image(H, W, C)
 
 
+def get_aspect_ratio(path):
+    image = load_image(path, 1024)
+    _, _, h, w = image.shape
+    return w / h
+
+    
 # Preprocess an image before passing it to a model.
 # We need to rescale from [0, 1] to [0, 255], convert from RGB to BGR,
 # and subtract the mean pixel.
@@ -71,6 +77,7 @@ def deprocess(output_tensor):
 # Combine the Y channel of the generated image and the UV/CbCr channels of the
 # content image to perform color-independent style transfer.
 def original_colors(content, generated):
+    content, generated = deprocess(content.clone()), deprocess(generated.clone())    
     content_channels = list(content.convert('YCbCr').split())
     generated_channels = list(generated.convert('YCbCr').split())
     content_channels[0] = generated_channels[0]
@@ -100,20 +107,16 @@ def maybe_print(net, t, print_iter, num_iterations, loss):
         if net.tv_weight > 0:
             print('  TV loss = %s' % ', '.join(['%.1e' % Decimal(module.loss.item()) for module in net.tv_losses]))
         print('  Total loss = %.2e' % Decimal(loss.item()))
-        
-def maybe_save(img, t, save_iter, num_iterations, orig_colors, output_path):
+
+def save(img, filename):
+    disp = deprocess(img.clone())
+    disp.save(str(filename))
+
+def maybe_save_preview(img, t, save_iter, num_iterations, output_path):
     should_save = save_iter > 0 and t % save_iter == 0
-    should_save = should_save or t == num_iterations
     if not should_save:
         return
     output_filename, file_extension = os.path.splitext(output_path)
-    if t == num_iterations:
-        filename = output_filename + str(file_extension)
-    else:
-        filename = str(output_filename) + "_" + str(t) + str(file_extension)
-    disp = deprocess(img.clone())
-    if orig_colors == 1:   # color-independent style transfer
-        disp = original_colors(deprocess(content_image.clone()), disp)  ## this doesn't work yet
-    disp.save(str(filename))
-
-# original_colors won't work yet...
+    output_filename = output_filename.replace('results', 'results/preview')
+    filename = '%s_%04d%s' % (output_filename, t, file_extension)
+    save(img, filename)
