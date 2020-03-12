@@ -195,6 +195,7 @@ path or a full absolute path.
   when using ADAM you will probably need to play with other parameters to get good results, especially
   the style weight, content weight, and learning rate.
 * `-learning_rate`: Learning rate to use with the ADAM optimizer. Default is 1e1.
+* `-normalize_weights`: If this flag is present, style and content weights will be divided by the number of channels for each layer. Idea from [PytorchNeuralStyleTransfer](https://github.com/leongatys/PytorchNeuralStyleTransfer).
 
 **Output options**:
 * `-output_image`: Name of the output image. Default is `out.png`.
