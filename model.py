@@ -4,29 +4,31 @@ import torch.utils.cpp_extension
 import torch.nn as nn
 import torch.optim as optim
 from CaffeLoader import loadCaffemodel
+from utils import *
 
-#cpp = torch.utils.cpp_extension.load(name="histogram", sources=["histogram.cpp", "histogram.cu"])
+
 
 ######################################################
 # StyleNet model
 
 class StyleNet(torch.nn.Module):
         
-    def __init__(self, params, dtype, multidevice, backward_device):
+    def __init__(self, params, dtype, multidevice, backward_device, verbose=True):
         super(StyleNet, self).__init__()
         self.params = params
         self.content_masks_orig = None
         self.style_masks_orig = None
-        self.tv_weight, self.content_weight, self.style_weight, self.hist_weight, self.style_stat = 1e-3, 5e0, 1e2, 0, 'gram'
         self.dtype, self.multidevice, self.backward_device = dtype, multidevice, backward_device
         self.content_losses, self.style_losses, self.hist_losses, self.tv_losses = [], [], [], []
+        self.set_params_default()
+        self.verbose = verbose
 
         content_layers = params.content_layers.split(',')
         style_layers = params.style_layers.split(',')
         hist_layers = params.hist_layers.split(',')
 
         next_content_idx, next_style_idx, next_hist_idx, c, r = 1, 1, 1, 0, 0
-        cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu, params.disable_check)
+        cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu, params.disable_check, self.verbose)
         
         net = nn.Sequential()
         
@@ -42,13 +44,13 @@ class StyleNet(torch.nn.Module):
                     net.add_module(str(len(net)), layer)
 
                     if layerList['C'][c] in content_layers:
-                        print("Setting up content layer " + str(i) + ": " + str(layerList['C'][c]))
+                        log("Setting up content layer " + str(i) + ": " + str(layerList['C'][c]), self.verbose)
                         loss_module = ContentLoss(self.content_weight)
                         net.add_module(str(len(net)), loss_module)
                         self.content_losses.append(loss_module)
 
                     if layerList['C'][c] in style_layers:
-                        print("Setting up style layer " + str(i) + ": " + str(layerList['C'][c]))
+                        log("Setting up style layer " + str(i) + ": " + str(layerList['C'][c]), self.verbose)
                         loss_module = MaskedStyleLoss(self.style_weight)
                         net.add_module(str(len(net)), loss_module)
                         self.style_losses.append(loss_module)
@@ -59,21 +61,21 @@ class StyleNet(torch.nn.Module):
                     net.add_module(str(len(net)), layer)
 
                     if layerList['R'][r] in content_layers:
-                        print("Setting up content layer " + str(i) + ": " + str(layerList['R'][r]))
+                        log("Setting up content layer " + str(i) + ": " + str(layerList['R'][r]), self.verbose)
                         loss_module = ContentLoss(self.content_weight)
                         net.add_module(str(len(net)), loss_module)
                         self.content_losses.append(loss_module)
                         next_content_idx += 1
 
                     if layerList['R'][r] in style_layers:
-                        print("Setting up style layer " + str(i) + ": " + str(layerList['R'][r]))
+                        log("Setting up style layer " + str(i) + ": " + str(layerList['R'][r]), self.verbose)
                         loss_module = MaskedStyleLoss(self.style_weight)
                         net.add_module(str(len(net)), loss_module)
                         self.style_losses.append(loss_module)
                         next_style_idx += 1
 
                     if layerList['R'][r] in hist_layers:
-                        print("Setting up histogram layer " + str(i) + ": " + str(layerList['R'][r]))
+                        log("Setting up histogram layer " + str(i) + ": " + str(layerList['R'][r]), self.verbose)
                         loss_module = MaskedHistLoss(self.hist_weight)
                         net.add_module(str(len(net)), loss_module)
                         self.hist_losses.append(loss_module)
@@ -85,7 +87,7 @@ class StyleNet(torch.nn.Module):
                     net.add_module(str(len(net)), layer)
         
         self.net = net
-        print(self.net)
+        log(self.net, self.verbose)
         
         # Freeze the network to prevent unnecessary gradient calculations
         for param in self.net.parameters():
@@ -94,7 +96,21 @@ class StyleNet(torch.nn.Module):
         # Setup multidevice
         if self.multidevice:
             self.__setup_multi_device(params.gpu, params.multidevice_strategy)
+            
+        log('Model setup successfully with parameters:\n%s' % params, True)
 
+
+    def set_params_default(self):
+        self.tv_weight = 1e-3
+        self.content_weight = 5e0
+        self.style_weight = 1e2
+        self.hist_weight = 0
+        self.style_stat = 'gram'
+        self.set_tv_weight(self.tv_weight)
+        self.set_content_weight(self.content_weight)
+        self.set_style_weight(self.style_weight)
+        self.set_hist_weight(self.hist_weight)
+        self.set_style_statistic(self.style_stat)
 
     def __setup_multi_device(self, gpu, multidevice_strategy):
         from CaffeLoader import ModelParallel
@@ -141,7 +157,7 @@ class StyleNet(torch.nn.Module):
             if isinstance(layer, MaskedHistLoss):
                 layer.strength = self.hist_weight
 
-
+                
     def set_tv_weight(self, tv_weight):
         if self.tv_weight == tv_weight:
             return
@@ -178,6 +194,9 @@ class StyleNet(torch.nn.Module):
 
     def capture(self, content_image, style_images, style_blend_weights=None, content_masks=None, style_masks=None):
         style_images = [style_images] if type(style_images) != list else style_images
+        style_images = [preprocess(style_image) for style_image in style_images]
+        content_image = preprocess(content_image)
+        content_masks = [preprocess(content_mask, to_normalize=False) for content_mask in content_masks] if content_masks is not None else content_masks
         self.content_masks = copy.deepcopy(content_masks)
         self.style_masks = copy.deepcopy(style_masks)
         self.num_styles = len(style_images)
@@ -210,8 +229,8 @@ class StyleNet(torch.nn.Module):
             for c, content_mask in enumerate(self.content_masks):
                 self.content_masks[c] = torch.mean(content_mask.type(self.dtype), axis=1)[0]
 
-        for layer in self.net:
-            if isinstance(layer, nn.MaxPool2d) or isinstance(layer, nn.AvgPool2d):
+        for L, layer in enumerate(self.net):
+            if (isinstance(layer, nn.MaxPool2d) or isinstance(layer, nn.AvgPool2d)):
                 if self.content_masks != None:
                     for k in range(self.num_styles):
                         h, w = self.content_masks[k].shape
@@ -249,7 +268,7 @@ class StyleNet(torch.nn.Module):
             l.mode = 'none'
         for i in self.hist_losses:
             i.mode = 'none'
-        print("Capturing content targets")
+        log("Capturing content targets", self.verbose)
         self.forward(content_image.type(self.dtype), loss_mode=False)
 
 
@@ -263,7 +282,7 @@ class StyleNet(torch.nn.Module):
         for l in self.hist_losses:
             l.mode = 'capture'
         for i, style_image in enumerate(style_images):
-            print("Capturing style target " + str(i+1))
+            log("Capturing style target " + str(i+1), self.verbose)
             for l in self.style_losses:
                 l.blend_weight = style_blend_weights[i]
             self.forward(style_image.type(self.dtype), loss_mode=False)
@@ -634,9 +653,10 @@ class TVLoss(nn.Module):
 ######################################################
 # Optimizer
 
-def setup_optimizer(img, params, num_iterations):
+def setup_optimizer(img, params, num_iterations, verbose=True):
     if params.optimizer == 'lbfgs':
-        print("Running optimization with L-BFGS")
+        if verbose:
+            print("Running optimization with L-BFGS")
         optim_state = {
             'max_iter': num_iterations,
             'tolerance_change': -1,
@@ -647,7 +667,8 @@ def setup_optimizer(img, params, num_iterations):
         optimizer = optim.LBFGS([img], **optim_state)
         loopVal = 1
     elif params.optimizer == 'adam':
-        print("Running optimization with ADAM")
+        if verbose:
+            print("Running optimization with ADAM")
         optimizer = optim.Adam([img], lr = params.learning_rate)
         loopVal = num_iterations - 1
     return optimizer, loopVal

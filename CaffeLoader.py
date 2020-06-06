@@ -194,31 +194,31 @@ vgg19_dict = {
 }
 
 
-def modelSelector(model_file, pooling):
+def modelSelector(model_file, pooling, verbose=True):
     vgg_list = ["fcn32s", "pruning", "sod", "vgg"]
     if any(name in model_file for name in vgg_list):
         if "pruning" in model_file:
-            print("VGG-16 Architecture Detected")
-            print("Using The Channel Pruning Model")
+            if verbose: print("VGG-16 Architecture Detected")
+            if verbose: print("Using The Channel Pruning Model")
             cnn, layerList = VGG_PRUNED(buildSequential(channel_list['VGG-16p'], pooling)), vgg16_dict
         elif "fcn32s" in model_file:
-            print("VGG-16 Architecture Detected")
-            print("Using the fcn32s-heavy-pascal Model")
+            if verbose: print("VGG-16 Architecture Detected")
+            if verbose: print("Using the fcn32s-heavy-pascal Model")
             cnn, layerList = VGG_FCN32S(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
         elif "sod" in model_file:
-            print("VGG-16 Architecture Detected")
-            print("Using The SOD Fintune Model")
+            if verbose: print("VGG-16 Architecture Detected")
+            if verbose: print("Using The SOD Fintune Model")
             cnn, layerList = VGG_SOD(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
         elif "19" in model_file:
-            print("VGG-19 Architecture Detected")
+            if verbose: print("VGG-19 Architecture Detected")
             cnn, layerList = VGG(buildSequential(channel_list['VGG-19'], pooling)), vgg19_dict
         elif "16" in model_file:
-            print("VGG-16 Architecture Detected")
+            if verbose: print("VGG-16 Architecture Detected")
             cnn, layerList = VGG(buildSequential(channel_list['VGG-16'], pooling)), vgg16_dict
         else:
             raise ValueError("VGG architecture not recognized.")
     elif "nin" in model_file:
-        print("NIN Architecture Detected")
+        if verbose: print("NIN Architecture Detected")
         cnn, layerList = NIN(pooling), nin_dict
     else:
         raise ValueError("Model architecture not recognized.")
@@ -226,29 +226,30 @@ def modelSelector(model_file, pooling):
 
 
 # Print like Torch7/loadcaffe
-def print_loadcaffe(cnn, layerList):
+def print_loadcaffe(cnn, layerList, verbose=True):
     c = 0
     for l in list(cnn):
          if "Conv2d" in str(l):
              in_c, out_c, ks  = str(l.in_channels), str(l.out_channels), str(l.kernel_size)
-             print(layerList['C'][c] +": " +  (out_c + " " + in_c + " " + ks).replace(")",'').replace("(",'').replace(",",'') )
+             if verbose: print(layerList['C'][c] +": " +  (out_c + " " + in_c + " " + ks).replace(")",'').replace("(",'').replace(",",'') )
              c+=1
          if c == len(layerList['C']):
              break
 
 
 # Load the model, and configure pooling layer type
-def loadCaffemodel(model_file, pooling, use_gpu, disable_check):
-    cnn, layerList = modelSelector(str(model_file).lower(), pooling)
+def loadCaffemodel(model_file, pooling, use_gpu, disable_check, verbose=True):
+    cnn, layerList = modelSelector(str(model_file).lower(), pooling, verbose)
 
     cnn.load_state_dict(torch.load(model_file), strict=(not disable_check))
-    print("Successfully loaded " + str(model_file))
+    if verbose:
+        print("Successfully loaded " + str(model_file))
 
     # Maybe convert the model to cuda now, to avoid later issues
     if "c" not in str(use_gpu).lower() or "c" not in str(use_gpu[0]).lower():
         cnn = cnn.cuda()
     cnn = cnn.features
 
-    print_loadcaffe(cnn, layerList)
+    print_loadcaffe(cnn, layerList, verbose)
 
     return cnn, layerList
