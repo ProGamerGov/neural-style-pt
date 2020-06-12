@@ -98,7 +98,15 @@ def display(img):
 
 
 def save(img, filename):
+    folder = os.path.dirname(filename)
+    if not os.path.isdir(folder):
+        os.mkdir(folder)
     img.save(str(filename))
+
+    
+def save_frame(img, index, folder):
+    filename = '%s/f%05d.png' % (folder, index)
+    save(img, filename)
 
     
 def random_tensor(w, h, c=3):
