@@ -15,7 +15,8 @@ def optimize(stylenet,
              update_iter=250, 
              display_preview=False, 
              save_preview=False, 
-             save_preview_path=None):
+             save_preview_path=None,
+             clear_output=True):
 
     def iterate_optimizer():
         t[0] += 1
@@ -40,7 +41,7 @@ def optimize(stylenet,
     while t[0] <= loopVal:
         optimizer.step(iterate_optimizer)
     
-    if update_iter is not None:
+    if update_iter is not None and clear_output:
         IPython.display.clear_output()   
     
     return img
@@ -159,10 +160,11 @@ def style_transfer(stylenet, config, input_image=None, verbose=False):
                        save_preview=False,
                        save_preview_path='results/preview/preview.png')
     
+    # tensor to PIL
+    img = deprocess(img)
+    
     # change back to original colors of content image
     if cfg.original_colors and cfg.content_image is not None:
         img = original_colors(content_image, img)
-    else:
-        img = deprocess(img)
         
     return img

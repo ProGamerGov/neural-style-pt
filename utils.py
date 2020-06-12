@@ -6,10 +6,11 @@ import numpy as np
 import IPython.display
 from decimal import Decimal
 
-Image.MAX_IMAGE_PIXELS = 1000000000 # Support gigapixel images
+Image.MAX_IMAGE_PIXELS = 1e9
 
 
 class StylenetArgs:
+    
     def __init__(self):
         self.gpu = 'c'
         self.optimizer = 'lbfgs'
@@ -24,8 +25,10 @@ class StylenetArgs:
         self.style_layers = 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1'
         self.hist_layers = 'relu2_1,relu3_1,relu4_1,relu5_1'
         self.multidevice_strategy = '4,7,29'
+    
     def __str__(self):
-        args = ['gpu: %s' % self.gpu,
+        args = [
+            'gpu: %s' % self.gpu,
             'optimizer: %s' % self.optimizer,
             'learning_rate: %0.2f' % self.learning_rate,
             'lbfgs_num_correction: %d' % self.lbfgs_num_correction,
@@ -37,7 +40,8 @@ class StylenetArgs:
             'content_layers: %s' % self.content_layers,
             'style_layers: %s' % self.style_layers,
             'hist_layers: %s' % self.hist_layers,
-            'multidevice_strategy: %s' % self.multidevice_strategy]
+            'multidevice_strategy: %s' % self.multidevice_strategy
+        ]
         return ', '.join(args)
 
 
@@ -47,9 +51,11 @@ class EasyDict(dict):
         self.__dict__ = self
         
 
-
-def load_image(path, image_size=None):
-    image = Image.open(path).convert('RGB')
+def load_image(image, image_size=None):
+    if isinstance(image, str):
+        image = Image.open(image).convert('RGB')
+    elif isinstance(image, np.ndarray):
+        image = Image.fromarray(image.astype(np.uint8)).convert('RGB')
     if image_size is not None and isinstance(image_size, tuple):
         image = resize(image, image_size)
     elif image_size is not None and not isinstance(image_size, tuple):
@@ -60,9 +66,16 @@ def load_image(path, image_size=None):
 
 
 def resize(image, image_size, mode=None, align_corners=True):
-    sampling_modes = {'nearest': Image.NEAREST, 'bilinear': Image.BILINEAR, 'bicubic': Image.BICUBIC, 'lanczos': Image.LANCZOS}
-    assert isinstance(image_size, tuple), 'Error: image_size must be a tuple.'
-    assert mode is None or mode in sampling_modes.keys(), 'Error: resample mode %s not understood: options are nearest, bilinear, bicubic, lanczos.'
+    sampling_modes = {
+        'nearest': Image.NEAREST, 
+        'bilinear': Image.BILINEAR,
+        'bicubic': Image.BICUBIC, 
+        'lanczos': Image.LANCZOS
+    }
+    assert isinstance(image_size, tuple), \
+        'Error: image_size must be a tuple.'
+    assert mode is None or mode in sampling_modes.keys(), \
+        'Error: resample mode %s not understood: options are nearest, bilinear, bicubic, lanczos.'
     w1, h1 = image.size
     w2, h2 = image_size
     if (h1, w1) == (w2, h2):
@@ -78,10 +91,12 @@ def resize_tensor(image, image_size, mode='bicubic', align_corners=True):
     _, _, h1, w1 = image.shape
     if (w1, h1) == image_size:
         return image
-    return torch.nn.functional.interpolate(image, 
-                                           tuple(reversed(image_size)), 
-                                           mode=mode, 
-                                           align_corners=align_corners)
+    return torch.nn.functional.interpolate(
+        image, 
+        tuple(reversed(image_size)), 
+        mode=mode, 
+        align_corners=align_corners
+    )
 
 
 def get_aspect_ratio(image):
@@ -96,10 +111,10 @@ def display(img):
         img = Image.fromarray(img.astype(np.uint8)).convert('RGB')
     IPython.display.display(img)
 
-
+    
 def save(img, filename):
     folder = os.path.dirname(filename)
-    if not os.path.isdir(folder):
+    if folder and not os.path.isdir(folder):
         os.mkdir(folder)
     img.save(str(filename))
 
@@ -147,7 +162,7 @@ def deprocess(tensor):
 
 
 def original_colors(content, generated):
-    content, generated = deprocess(content.clone()), deprocess(generated.clone())    
+    #content, generated = deprocess(content.clone()), deprocess(generated.clone())    
     content_channels = list(content.convert('YCbCr').split())
     generated_channels = list(generated.convert('YCbCr').split())
     content_channels[0] = generated_channels[0]
