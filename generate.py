@@ -3,10 +3,11 @@ from model import *
 from utils import *
 
 
-_stylenet_config_keys_ = ['size', 'content_image', 'style_images', 
-                          'style_image', 'content_masks', 'style_blend_weights', 
-                          'num_octaves', 'style_scale', 'num_iterations', 
-                          'octave_ratio', 'original_colors']
+_stylenet_config_keys_ = [
+    'size', 'content_image', 'style_images', 
+    'style_image', 'content_masks', 'style_blend_weights', 
+    'num_octaves', 'style_scale', 'num_iterations', 
+    'octave_ratio', 'original_colors']
 
 
 def optimize(stylenet, 
@@ -45,8 +46,6 @@ def optimize(stylenet,
         IPython.display.clear_output()   
     
     return img
-
-
 
 
 
@@ -94,9 +93,14 @@ def style_transfer(stylenet, config, input_image=None, verbose=False):
         content_image_orig = deprocess(random_tensor(cfg.size[0], cfg.size[1]))
     elif cfg.content_image is not None and isinstance(cfg.content_image, str):
         content_image_orig = load_image(cfg.content_image, cfg.size)
+        cfg.size = get_size(content_image_orig)  ### is this right??????
     else:
         content_image_orig = cfg.content_image
+        cfg.size = get_size(content_image_orig)  ### is this right??????
 
+        
+        
+        
     # load original style images, and save aspect ratios
     max_size = max(cfg.size) if isinstance(cfg.size, tuple) else cfg.size
     style_images_orig = [load_image(image, int(max_size * max(cfg.style_scale))) 
@@ -105,6 +109,7 @@ def style_transfer(stylenet, config, input_image=None, verbose=False):
     
     # load original content masks
     if cfg.content_masks is not None:
+        cfg.content_masks = cfg.content_masks if isinstance(cfg.content_masks, list) else [cfg.content_masks]
         content_masks_orig = [load_image(mask, cfg.size) 
                               for mask in cfg.content_masks]
     else:

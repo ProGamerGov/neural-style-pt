@@ -5,8 +5,50 @@ import torch.nn as nn
 import torch.optim as optim
 from CaffeLoader import loadCaffemodel
 from utils import *
+from neuralarttools.util import *
 
 
+
+######################################################
+# StyleNet args
+
+class StylenetArgs:
+    
+    def __init__(self):
+        self.gpu = 'c'
+        self.optimizer = 'lbfgs'
+        self.learning_rate = 1e0
+        self.lbfgs_num_correction = 100
+        self.pooling = 'max'
+        self.model_file = 'models/vgg19-d01eb7cb.pth'
+        self.disable_check = False
+        self.backend = 'nn'
+        self.cudnn_autotune = False
+        self.content_layers = 'relu4_2'
+        self.style_layers = 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1'
+        self.hist_layers = 'relu2_1,relu3_1,relu4_1,relu5_1'
+        self.multidevice_strategy = '4,7,29'
+    
+    def __str__(self):
+        args = [
+            'gpu: %s' % self.gpu,
+            'optimizer: %s' % self.optimizer,
+            'learning_rate: %0.2f' % self.learning_rate,
+            'lbfgs_num_correction: %d' % self.lbfgs_num_correction,
+            'pooling: %s' % self.pooling,
+            'model_file: %s' % self.model_file,
+            'disable_check: %s' % 'True' if self.disable_check else 'False',
+            'backend: %s' % self.backend,
+            'cudnn_autotune: %s' % 'True' if self.cudnn_autotune else 'False',
+            'content_layers: %s' % self.content_layers,
+            'style_layers: %s' % self.style_layers,
+            'hist_layers: %s' % self.hist_layers,
+            'multidevice_strategy: %s' % self.multidevice_strategy
+        ]
+        return ', '.join(args)
+
+
+    
 
 ######################################################
 # StyleNet model

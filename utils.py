@@ -2,88 +2,8 @@ import os
 import torch
 import torchvision.transforms as transforms
 from PIL import Image
-import numpy as np
-import IPython.display
+import IPython
 from decimal import Decimal
-
-Image.MAX_IMAGE_PIXELS = 1e9
-
-
-class StylenetArgs:
-    
-    def __init__(self):
-        self.gpu = 'c'
-        self.optimizer = 'lbfgs'
-        self.learning_rate = 1e0
-        self.lbfgs_num_correction = 100
-        self.pooling = 'max'
-        self.model_file = 'models/vgg19-d01eb7cb.pth'
-        self.disable_check = False
-        self.backend = 'nn'
-        self.cudnn_autotune = False
-        self.content_layers = 'relu4_2'
-        self.style_layers = 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1'
-        self.hist_layers = 'relu2_1,relu3_1,relu4_1,relu5_1'
-        self.multidevice_strategy = '4,7,29'
-    
-    def __str__(self):
-        args = [
-            'gpu: %s' % self.gpu,
-            'optimizer: %s' % self.optimizer,
-            'learning_rate: %0.2f' % self.learning_rate,
-            'lbfgs_num_correction: %d' % self.lbfgs_num_correction,
-            'pooling: %s' % self.pooling,
-            'model_file: %s' % self.model_file,
-            'disable_check: %s' % 'True' if self.disable_check else 'False',
-            'backend: %s' % self.backend,
-            'cudnn_autotune: %s' % 'True' if self.cudnn_autotune else 'False',
-            'content_layers: %s' % self.content_layers,
-            'style_layers: %s' % self.style_layers,
-            'hist_layers: %s' % self.hist_layers,
-            'multidevice_strategy: %s' % self.multidevice_strategy
-        ]
-        return ', '.join(args)
-
-
-class EasyDict(dict):
-    def __init__(self, *args, **kwargs):
-        super(EasyDict, self).__init__(*args, **kwargs)
-        self.__dict__ = self
-        
-
-def load_image(image, image_size=None):
-    if isinstance(image, str):
-        image = Image.open(image).convert('RGB')
-    elif isinstance(image, np.ndarray):
-        image = Image.fromarray(image.astype(np.uint8)).convert('RGB')
-    if image_size is not None and isinstance(image_size, tuple):
-        image = resize(image, image_size)
-    elif image_size is not None and not isinstance(image_size, tuple):
-        aspect = get_aspect_ratio(image)
-        image_size = (int(aspect * image_size), image_size)
-        image = resize(image, image_size)
-    return image
-
-
-def resize(image, image_size, mode=None, align_corners=True):
-    sampling_modes = {
-        'nearest': Image.NEAREST, 
-        'bilinear': Image.BILINEAR,
-        'bicubic': Image.BICUBIC, 
-        'lanczos': Image.LANCZOS
-    }
-    assert isinstance(image_size, tuple), \
-        'Error: image_size must be a tuple.'
-    assert mode is None or mode in sampling_modes.keys(), \
-        'Error: resample mode %s not understood: options are nearest, bilinear, bicubic, lanczos.'
-    w1, h1 = image.size
-    w2, h2 = image_size
-    if (h1, w1) == (w2, h2):
-        return image
-    if mode is None:
-        mode = 'bicubic' if w2*h2 >= w1*h1 else 'lanczos'
-    resample_mode = sampling_modes[mode]
-    return image.resize((w2, h2), resample=resample_mode)
 
 
 def resize_tensor(image, image_size, mode='bicubic', align_corners=True):
@@ -99,31 +19,6 @@ def resize_tensor(image, image_size, mode='bicubic', align_corners=True):
     )
 
 
-def get_aspect_ratio(image):
-    if isinstance(image, str):
-        image = load_image(image, 1024)
-    w, h = image.size
-    return float(w) / h
-
-
-def display(img):
-    if isinstance(img, np.ndarray):
-        img = Image.fromarray(img.astype(np.uint8)).convert('RGB')
-    IPython.display.display(img)
-
-    
-def save(img, filename):
-    folder = os.path.dirname(filename)
-    if folder and not os.path.isdir(folder):
-        os.mkdir(folder)
-    img.save(str(filename))
-
-    
-def save_frame(img, index, folder):
-    filename = '%s/f%05d.png' % (folder, index)
-    save(img, filename)
-
-    
 def random_tensor(w, h, c=3):
     tensor = torch.randn(c, h, w).mul(0.001).unsqueeze(0)
     return tensor
@@ -202,14 +97,3 @@ def maybe_save_preview(img, t, save_iter, num_iterations, output_path):
     #output_filename = output_filename.replace('results', 'results/preview')
     filename = '%s_%04d%s' % (output_filename, t, file_extension)
     save(deprocess(img), filename)
-
-
-def log(message, verbose=True):
-    if not verbose:
-        return
-    print(message)
-
-
-def warn(condition, message, verbose=True):
-    if condition:
-        log('Warning: %s' % message, verbose)
