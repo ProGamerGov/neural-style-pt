@@ -6,6 +6,11 @@ import IPython
 from decimal import Decimal
 
 
+
+
+from neuralarttools.util import *
+
+
 def resize_tensor(image, image_size, mode='bicubic', align_corners=True):
     assert isinstance(image_size, tuple), 'Error: image_size must be a tuple'
     _, _, h1, w1 = image.shape
@@ -97,3 +102,5 @@ def maybe_save_preview(img, t, save_iter, num_iterations, output_path):
     #output_filename = output_filename.replace('results', 'results/preview')
     filename = '%s_%04d%s' % (output_filename, t, file_extension)
     save(deprocess(img), filename)
+
+    
