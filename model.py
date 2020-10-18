@@ -8,6 +8,12 @@ from utils import *
 from neuralarttools.util import *
 
 
+default_tv_weight = 1e-3
+default_content_weight = 5e0
+default_style_weight = 1e2
+default_hist_weight = 0
+default_style_stat = 'gram'
+
 
 ######################################################
 # StyleNet args
@@ -143,17 +149,13 @@ class StyleNet(torch.nn.Module):
 
 
     def set_params_default(self):
-        self.tv_weight = 1e-3
-        self.content_weight = 5e0
-        self.style_weight = 1e2
-        self.hist_weight = 0
-        self.style_stat = 'gram'
-        self.set_tv_weight(self.tv_weight)
-        self.set_content_weight(self.content_weight)
-        self.set_style_weight(self.style_weight)
-        self.set_hist_weight(self.hist_weight)
-        self.set_style_statistic(self.style_stat)
+        self.set_tv_weight(default_tv_weight)
+        self.set_content_weight(default_content_weight)
+        self.set_style_weight(default_style_weight)
+        self.set_hist_weight(default_hist_weight)
+        self.set_style_statistic(default_style_stat)
 
+        
     def __setup_multi_device(self, gpu, multidevice_strategy):
         from CaffeLoader import ModelParallel
         self.multidevice = True
