@@ -454,7 +454,7 @@ class StyleLoss(nn.Module):
         self.crit = nn.MSELoss()
         self.mode = 'None'
         self.blend_weight = None
-        self.normalize
+        self.normalize = normalize
 
     def forward(self, input):
         self.G = self.gram(input)
