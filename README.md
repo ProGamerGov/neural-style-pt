@@ -195,6 +195,7 @@ path or a full absolute path.
   when using ADAM you will probably need to play with other parameters to get good results, especially
   the style weight, content weight, and learning rate.
 * `-learning_rate`: Learning rate to use with the ADAM optimizer. Default is 1e1.
+* `-normalize_gradients`: If this flag is present, style and content gradients from each layer will be L1 normalized.
 
 **Output options**:
 * `-output_image`: Name of the output image. Default is `out.png`.
