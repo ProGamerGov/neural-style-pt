@@ -4,11 +4,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.transforms as transforms
-
 from PIL import Image
 from CaffeLoader import loadCaffemodel, ModelParallel
-
 import argparse
+
+
 parser = argparse.ArgumentParser()
 # Basic options
 parser.add_argument("-style_image", help="Style target image", default='examples/inputs/seated-nude.jpg')
@@ -32,16 +32,16 @@ parser.add_argument("-lbfgs_num_correction", type=int, default=100)
 
 # Output options
 parser.add_argument("-print_iter", type=int, default=50)
-parser.add_argument("-save_iter", type=int, default=100)
+parser.add_argument("-save_iter", type=int, default=0)
 parser.add_argument("-output_image", default='out.png')
 
 # Other options
 parser.add_argument("-style_scale", type=float, default=1.0)
 parser.add_argument("-original_colors", type=int, choices=[0, 1], default=0)
-parser.add_argument("-pooling", choices=['avg', 'max'], default='max')
+parser.add_argument("-pooling", choices=['avg', 'max'], default='max') # made a change here
 parser.add_argument("-model_file", type=str, default='models/vgg19-d01eb7cb.pth')
 parser.add_argument("-disable_check", action='store_true')
-parser.add_argument("-backend", choices=['nn', 'cudnn', 'mkl', 'mkldnn', 'openmp', 'mkl,cudnn', 'cudnn,mkl'], default='nn')
+parser.add_argument("-backend", choices=['nn', 'cudnn', 'mkl', 'mkldnn', 'openmp', 'mkl,cudnn', 'cudnn,mkl'], default='cudnn') # also here
 parser.add_argument("-cudnn_autotune", action='store_true')
 parser.add_argument("-seed", type=int, default=-1)
 
@@ -440,6 +440,7 @@ class GramMatrix(nn.Module):
     def forward(self, input):
         B, C, H, W = input.size()
         x_flat = input.view(C, H * W)
+        x_flat = x_flat - x_flat.mean(1).unsqueeze(1) #Covariance Loss
         return torch.mm(x_flat, x_flat.t())
 
 
