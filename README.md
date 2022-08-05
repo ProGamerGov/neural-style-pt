@@ -302,3 +302,8 @@ Images are initialized with white noise and optimized using L-BFGS.
 We perform style reconstructions using the `conv1_1`, `conv2_1`, `conv3_1`, `conv4_1`, and `conv5_1` layers
 and content reconstructions using the `conv4_2` layer. As in the paper, the five style reconstruction losses have
 equal weights.
+
+
+## Citation
+
+If you find this code useful for your research, please cite it using the provided citation.
