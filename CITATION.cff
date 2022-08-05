@@ -1,0 +1,19 @@
+abstract: "PyTorch implementation of neural style transfer algorithm"
+authors:
+  - family-names: Egan
+    given-names: Ben
+cff-version: 1.2.0
+date-released: "2018-07-25"
+identifiers:
+  - description: "This is the collection of archived snapshots of all versions of neural-style-pt"
+    type: doi
+    value: 10.5281/zenodo.6967432
+keywords:
+  - "NST"
+  - "neural style transfer"
+  - research
+license: MIT
+message: "If you use this software, please cite it using these metadata."
+repository-code: "https://github.com/ProGamerGov/neural-style-pt"
+title: "neural-style-pt"
+version: 1.0.0
