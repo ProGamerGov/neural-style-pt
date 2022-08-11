@@ -300,22 +300,32 @@ def setup_gpu():
         elif 'openmp' in params.backend:
             torch.backends.openmp.enabled = True
 
+    def setup_mps():
+        if 'mps' in params.backend:
+            assert torch.backends.mps.is_available()
+
     multidevice = False
     if "," in str(params.gpu):
         devices = params.gpu.split(',')
         multidevice = True
 
-        if 'c' in str(devices[0]).lower():
+        if 'cpu' in str(devices[0]).lower():
             backward_device = "cpu"
             setup_cuda(), setup_cpu()
+        elif 'mps' in str(devices[0]).lower():
+            backward_device = "mps"
+            setup_mps(), setup_cuda(), setup_cpu()
         else:
             backward_device = "cuda:" + devices[0]
             setup_cuda()
         dtype = torch.FloatTensor
 
-    elif "c" not in str(params.gpu).lower():
+    elif "cpu" not in str(params.gpu).lower() and "mps" not in str(params.gpu).lower():
         setup_cuda()
         dtype, backward_device = torch.cuda.FloatTensor, "cuda:" + str(params.gpu)
+    elif "cpu" not in str(params.gpu).lower():
+        setup_mps()
+        dtype, backward_device = torch.FloatTensor, "mps"
     else:
         setup_cpu()
         dtype, backward_device = torch.FloatTensor, "cpu"
