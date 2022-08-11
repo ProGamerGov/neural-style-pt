@@ -323,7 +323,7 @@ def setup_gpu():
     elif "cpu" not in str(params.gpu).lower() and "mps" not in str(params.gpu).lower():
         setup_cuda()
         dtype, backward_device = torch.cuda.FloatTensor, "cuda:" + str(params.gpu)
-    elif "cpu" not in str(params.gpu).lower():
+    elif "mps" in str(params.gpu).lower():
         setup_mps()
         dtype, backward_device = torch.FloatTensor, "mps"
     else:
