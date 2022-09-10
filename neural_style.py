@@ -59,7 +59,7 @@ def main():
 
     cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.disable_check)
 
-    content_image = preprocess(params.content_image, params.image_size).type(dtype)
+    content_image = preprocess(params.content_image, params.image_size).to(backward_device)
     style_image_input = params.style_image.split(',')
     style_image_list, ext = [], [".jpg", ".jpeg", ".png", ".tiff"]
     for image in style_image_input:
@@ -72,7 +72,7 @@ def main():
     style_images_caffe = []
     for image in style_image_list:
         style_size = int(params.image_size * params.style_scale)
-        img_caffe = preprocess(image, style_size).type(dtype)
+        img_caffe = preprocess(image, style_size).to(backward_device)
         style_images_caffe.append(img_caffe)
 
     if params.init_image != None:
@@ -154,6 +154,8 @@ def main():
 
     if multidevice:
         net = setup_multi_device(net, params.gpu, params.multidevice_strategy)
+    else:
+        net = net.to(backward_device)
 
     # Capture content targets
     for i in content_losses:
