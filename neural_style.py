@@ -153,7 +153,7 @@ def main():
                 net.add_module(str(len(net)), layer)
 
     if multidevice:
-        net = setup_multi_device(net)
+        net = setup_multi_device(net, params.gpu, params.multidevice_strategy)
 
     # Capture content targets
     for i in content_losses:
@@ -330,11 +330,11 @@ def setup_gpu():
     return dtype, multidevice, backward_device
 
 
-def setup_multi_device(net):
-    assert len(params.gpu.split(',')) - 1 == len(params.multidevice_strategy.split(',')), \
+def setup_multi_device(net, device, multidevice_strategy):
+    assert len(device.split(',')) - 1 == len(multidevice_strategy.split(',')), \
       "The number of -multidevice_strategy layer indices minus 1, must be equal to the number of -gpu devices."
 
-    new_net = ModelParallel(net, params.gpu, params.multidevice_strategy)
+    new_net = ModelParallel(net, device, multidevice_strategy)
     return new_net
 
 
