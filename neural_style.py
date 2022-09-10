@@ -55,7 +55,7 @@ Image.MAX_IMAGE_PIXELS = 1000000000 # Support gigapixel images
 
 
 def main():
-    dtype, multidevice, backward_device = setup_gpu()
+    multidevice, backward_device = setup_gpu()
 
     cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.disable_check)
 
@@ -318,18 +318,17 @@ def setup_gpu():
         else:
             backward_device = "cuda:" + devices[0]
             setup_cuda()
-        dtype = torch.FloatTensor
 
     elif "cpu" not in str(params.gpu).lower() and "mps" not in str(params.gpu).lower():
         setup_cuda()
-        dtype, backward_device = torch.cuda.FloatTensor, "cuda:" + str(params.gpu)
+        backward_device = "cuda:" + str(params.gpu)
     elif "mps" in str(params.gpu).lower():
         setup_mps()
-        dtype, backward_device = torch.FloatTensor, "mps"
+        backward_device = "mps"
     else:
         setup_cpu()
-        dtype, backward_device = torch.FloatTensor, "cpu"
-    return dtype, multidevice, backward_device
+        backward_device = "cpu"
+    return multidevice, backward_device
 
 
 def setup_multi_device(net, device, multidevice_strategy):
