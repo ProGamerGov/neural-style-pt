@@ -1,5 +1,4 @@
 import os
-import copy
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -105,13 +104,12 @@ def main():
     style_layers = params.style_layers.split(',')
 
     # Set up the network, inserting style and content loss modules
-    cnn = copy.deepcopy(cnn)
     content_losses, style_losses, tv_losses = [], [], []
     next_content_idx, next_style_idx = 1, 1
     net = nn.Sequential()
     c, r = 0, 0
     if params.tv_weight > 0:
-        tv_mod = TVLoss(params.tv_weight).type(dtype)
+        tv_mod = TVLoss(params.tv_weight)
         net.add_module(str(len(net)), tv_mod)
         tv_losses.append(tv_mod)
 
