@@ -1,3 +1,4 @@
+import copy
 import torch
 import torch.nn as nn
 
@@ -247,7 +248,8 @@ def loadCaffemodel(model_file, pooling, use_gpu, disable_check):
     # Maybe convert the model to cuda now, to avoid later issues
     if "c" not in str(use_gpu).lower() or "c" not in str(use_gpu[0]).lower():
         cnn = cnn.cuda()
-    cnn = cnn.features
+
+    cnn = copy.deepcopy(cnn.features)
 
     print_loadcaffe(cnn, layerList)
 
