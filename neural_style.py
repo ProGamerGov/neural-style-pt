@@ -77,7 +77,7 @@ def main():
 
     if params.init_image != None:
         image_size = (content_image.size(2), content_image.size(3))
-        init_image = preprocess(params.init_image, image_size).type(dtype)
+        init_image = preprocess(params.init_image, image_size).to(backward_device)
 
     # Handle style blending weights for multiple style inputs
     style_blend_weights = []
@@ -197,7 +197,7 @@ def main():
         torch.backends.cudnn.deterministic=True
     if params.init == 'random':
         B, C, H, W = content_image.size()
-        img = torch.randn(C, H, W).mul(0.001).unsqueeze(0).type(dtype)
+        img = torch.randn(C, H, W).mul(0.001).unsqueeze(0).to(backward_device)
     elif params.init == 'image':
         if params.init_image != None:
             img = init_image.clone()
