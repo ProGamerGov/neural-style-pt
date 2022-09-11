@@ -55,7 +55,42 @@ params = parser.parse_args()
 Image.MAX_IMAGE_PIXELS = 1000000000 # Support gigapixel images
 
 
+class TransferParams():
+    style_image = 'examples/inputs/seated-nude.jpg'
+    style_blend_weights = None
+    content_image = 'examples/inputs/tubingen.jpg'
+    image_size = 512
+    gpu = 0
+    content_weight = 5e0
+    style_weight = 1e2
+    normalize_weights = False
+    tv_weight = 1e-3
+    num_iterations = 1000
+    init = 'random'
+    init_image = None
+    optimizer = 'lbfgs'
+    learning_rate = 1e0
+    lbfgs_num_correction = 100
+    print_iter = 50
+    save_iter = 100
+    output_image = 'out.png'
+    log_level = 10
+    style_scale = 1.0
+    original_colors = 0
+    pooling = 'max'
+    model_file = 'models/vgg19-d01eb7cb.pth'
+    disable_check = False
+    backend = 'nn'
+    cudnn_autotune = False
+    seed = -1
+    content_layers = 'relu4_2'
+    style_layers = 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1'
+    multidevice_strategy = '4,7,29'
+
 def main():
+    transfer(params)
+
+def transfer(params):
     dtype, multidevice, backward_device = setup_gpu()
 
     cnn, layerList = loadCaffemodel(params.model_file, params.pooling, params.gpu, params.disable_check)
